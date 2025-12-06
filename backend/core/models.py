@@ -2,19 +2,22 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 import uuid
+from .managers import PersonManager
 
 class Person (AbstractUser):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = None
     email_id = models.EmailField(unique=True)
     person_name = models.CharField(max_length=100)
-    profile_pciture = models.ImageField(upload_to = "profiles/", null=True, blank=True)
+    profile_picture = models.ImageField(upload_to = "profiles/", null=True, blank=True)
     short_bio = models.TextField(max_length=300, blank=True)
     batch = models.CharField(max_length=10, blank=True)
     department = models.CharField(max_length=50, blank=True)
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['person_name']
+
+    objects = PersonManager()
 
     def __str__(self):
         return self.person_name or self.email_id
@@ -41,6 +44,7 @@ class Events(models.Model):
     event_qr_code = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
+        
         return self.event_name
     
 class UserRole(models.Model):
@@ -88,7 +92,7 @@ class Photo(models.Model):
     
 class PhotoMetaData(models.Model):
     photo_metadata_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    photo_id = models.ForeignKey("Photo", on_delete=models.CASCADE, null=False, blank=False, unique=True)
+    photo_id = models.OneToOneField("Photo", on_delete=models.CASCADE, related_name="photo_metadata")
     camera_make = models.CharField(max_length=50, null=True, blank=True)
     camera_model = models.CharField(max_length=50, null=True, blank=True)
     lens_model = models.CharField(max_length=50, null=True, blank=True)
