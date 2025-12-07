@@ -62,6 +62,17 @@ class UserRole(models.Model):
             return f"{self.user_id} - {self.role_id} @ {self.event_id}"
         return f"{self.user_id} - {self.role_id}"
     
+class OmniportAccount(models.Model):
+    omniport_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    person_id = models.ForeignKey("Person", on_delete=models.CASCADE, related_name= "omniport_accounts")
+    omniport_user_id = models.CharField(max_length=500, unique=True)
+    access_token = models.CharField(max_length=500, unique = True)
+    refresh_token = models.CharField(max_length=500, unique = True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.person_id} - {self.omniport_user_id}"
+    
 
 class EmailOTP(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

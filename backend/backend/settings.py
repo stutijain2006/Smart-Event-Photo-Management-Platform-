@@ -43,6 +43,10 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = "core.Person"
+OMNIPORT_BASE_URL = "base_url"
+OMNIPORT_CLIENT_ID = "your_client_id"
+OMNIPORT_CLIENT_SECRET = "your_client_secret"
+OMNIPORT_REDIRECT_URI = "your_redirect_url"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
