@@ -13,6 +13,7 @@ class Person (AbstractUser):
     short_bio = models.TextField(max_length=300, blank=True)
     batch = models.CharField(max_length=10, blank=True)
     department = models.CharField(max_length=50, blank=True)
+    is_email_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['person_name']
@@ -60,6 +61,17 @@ class UserRole(models.Model):
         if self.event_id:
             return f"{self.user_id} - {self.role_id} @ {self.event_id}"
         return f"{self.user_id} - {self.role_id}"
+    
+
+class EmailOTP(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email_id = models.EmailField()
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"OTP sent for {self.email_id}"
     
 class Album(models.Model):
     album_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
