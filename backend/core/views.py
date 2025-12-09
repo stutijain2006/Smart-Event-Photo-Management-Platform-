@@ -2,13 +2,20 @@ import uuid
 from django.contrib.auth import login , logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from .models import Person , EmailOTP , OmniportAccount
+from rest_framework import status,generics,  permissions
+from .models import Person , EmailOTP , OmniportAccount, Photo, Album, Events
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
     VerifyEmailSerializer,
-    PersonSerializer
+    PersonSerializer,
+    PhotoSerializer,
+    AlbumSerializer,
+    EventSerializer
+)
+from .permissions import (  
+    IsEventManagerOrAdmin,
+    IsPhotographerOrAdmin
 )
 from .utils import (
     generate_otp,
@@ -138,3 +145,56 @@ class OmniportCallBackView(APIView):
 
         login(request, user)
         return Response({"message": "User logged in successfully"}, status=status.HTTP_200_OK)
+    
+class EventListCreateView(generics.ListCreateAPIView):
+    queryset = Events.objects.all().order_by(-"start_time")
+    serializer_class = EventSerializer
+
+    def get_permission(self, request, view, obj=None):
+        if self.request.method in permissions.SAFE_METHODS:
+            return permissions.AllowAny()
+        return[permissions.IsAuthenticated(), IsEventManagerOrAdmin()]
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+class AlbumListCreateView(generics.ListCreateAPIView):
+    queryset = Album.objects.all().order_by(-"created_at")
+    serializer_class = AlbumSerializer
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return permissions.AllowAny()
+        return[permissions.IsAuthenticated(), IsPhotographerOrAdmin()]
+    
+    def get_queryset(self):
+        qs= super().get_queryset()
+        event_id = self.request.query_params.get('event_id')
+        if event_id is not None:
+            qs = qs.filter(event_id=event_id)
+        return qs
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+class PhotoListCreateView(generics.ListCreateAPIView):
+    queryset = Photo.objects.all().order_by(-"uploaded_at")
+    serializer_class = PhotoSerializer
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return permissions.AllowAny()
+        return[permissions.IsAuthenticated(), IsPhotographerOrAdmin()]
+    
+    def get_queryset(self):
+        qs= super().get_queryset()
+        event_id = self.request.query_params.get('event_id')
+        album_id = self.request.query_params.get('album_id')
+        if event_id is not None:
+            qs = qs.filter(event_id=event_id)
+        if album_id is not None:
+            qs = qs.filter(album_id=album_id)
+        return qs
+    
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by = self.request.user)

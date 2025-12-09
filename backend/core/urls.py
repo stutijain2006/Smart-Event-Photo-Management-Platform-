@@ -5,7 +5,10 @@ from .views import (
     LoginView,
     LogOut,
     OmniportLoginURLView,
-    OmniportCallBackView
+    OmniportCallBackView,
+    EventListCreateView,
+    AlbumListCreateView,
+    PhotoListCreateView
 )
 
 urlpatterns =[
@@ -15,4 +18,7 @@ urlpatterns =[
     path("auth/verify-email", VerifyEmail.as_view(), name="verify-email"),
     path("auth/omniport-login-url", OmniportLoginURLView.as_view(), name="omniport-login-url"),
     path("auth/omniport-callback", OmniportCallBackView.as_view(), name="omniport-callback"),
+    path("events/", EventListCreateView.as_view(), name="event-list-create"),
+    path("albums/", AlbumListCreateView.as_view(), name="album-list-create"),
+    path("photos/", PhotoListCreateView.as_view(), name="photo-list-create"),
 ]

@@ -18,6 +18,7 @@ class PersonSerializer(serializers.ModelSerializer):
         ]
 
 class EventSerializer(serializers.ModelSerializer):
+    created_by = serializers.ReadOnlyField(source="created_by.person_name")
     class Meta:
         model = Events
         fields = [
@@ -34,6 +35,7 @@ class EventSerializer(serializers.ModelSerializer):
         ]
 
 class AlbumSerializer(serializers.ModelSerializer):
+    created_by = serializers.ReadOnlyField(source="created_by.person_name")
     class Meta:
         fields = [
             "album_id",
@@ -45,6 +47,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         ]
 
 class PhotoSerializer(serializers.ModelSerializer):
+    created_by = serializers.ReadOnlyField(source="created_by.person_name") 
     class Meta:
         fields = [
             "photo_id",
@@ -107,4 +110,5 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("User is not active")
 
         data["user"] = user
-        return data 
+        return data
+
