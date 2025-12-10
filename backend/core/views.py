@@ -1,11 +1,18 @@
 import uuid
+import os
+import io
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from PIL import Image, ExifTags
+from django.db.models import Q
 from django.contrib.auth import login , logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status,generics,  permissions
 from django.db import transaction
-from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest
+from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, PhotoMetaData
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -19,7 +26,7 @@ from .serializers import (
     DownloadSerializer,
     PersonTagSerializer,
     AlbumAddPhotoSerializer,
-    RoleChangeRequestSerializer
+    RoleChangeRequestSerializer,
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -159,7 +166,7 @@ class EventListCreateView(generics.ListCreateAPIView):
     queryset = Events.objects.all().order_by("-start_time")
     serializer_class = EventSerializer
 
-    def get_permission(self, request, view, obj=None):
+    def get_permissions(self, request, view, obj=None):
         if self.request.method in permissions.SAFE_METHODS:
             return permissions.AllowAny()
         return[permissions.IsAuthenticated(), IsEventManagerOrAdmin()]
@@ -355,3 +362,225 @@ class RoleChangeRequestReview(APIView):
         else:
             request.reject(request.reviewed_by)
             return Response({"message": "Role change request rejected successfully"}, status=status.HTTP_200_OK)
+        
+
+class PhotoUpload(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+
+    def post(self, request):
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        event_id = request.data.get("event_id")
+        album_id = request.data.get("album_id")
+        taken_at = request.data.get("taken_at")
+
+        filename = uploaded_file.name
+        save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
+        saved_path = default_storage.save(save_path, uploaded_file)
+        try:
+            file_url = default_storage.url(saved_path)
+        except FileNotFoundError:
+            file_url = None
+
+        photo = photo.objects.create(
+            event_id = Events.objects.get(event_id = event_id) if event_id else None,
+            album_id = Album.objects.get(album_id = album_id) if album_id else None,
+            uploaded_by = request.user,
+            file_path_original = file_url,
+            file_path_thumbnail = None,
+            file_path_watermarked = None,
+            taken_at = taken_at or None,
+            status = "processing"
+        )
+        try:
+            extract_and_save_metadata(photo)
+        except Exception as e:
+            photo.status = "processing"
+            photo.save()      
+        serializer = PhotoSerializer(photo)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class MultiplePhotoUpload(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+
+    def post(self, request):
+        files = request.FILES.getlist('files') or request.FILES.getlist('file')
+        if not files:
+            return Response({"message": "No files uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        photos = []
+        for f in files:
+            filename = f.name
+            save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
+            saved_path = default_storage.save(save_path, f)
+            try: 
+                file_url = default_storage.url(saved_path)
+            except FileNotFoundError:
+                file_url = None
+            photo = photo.objects.create(
+                uploaded_by = request.user,
+                file_path_original = file_url,
+                file_path_thumbnail = None,
+                file_path_watermarked = None,
+                status = "processing"
+            )
+            photos.append(photo.photo_id)
+
+            try:
+                extract_and_save_metadata(photo)
+            except Exception as e:
+                pass
+
+        return Response({"photos": photos}, status=status.HTTP_201_CREATED)
+    
+def get_exif(img: Image.Image) -> dict:
+    raw_exif = {}
+    try:
+        raw_exif = img._getexif()
+    except Exception:
+        pass
+    exif = {}
+    for tag, value in raw_exif.items():
+        decoded_tag = ExifTags.TAGS.get(tag, tag)
+        exif[decoded_tag] = value
+    return exif
+
+def extract_and_save_metadata(photo: Photo):
+    image_path = photo.file_path_original
+    if not image_path:
+        return
+    img = get_exif(Image.open(image_path))
+    camera_make = img.get("Make")
+    camera_model = img.get("Model")
+    aperture = img.get("FNumber")
+    lens_model = None
+    focal_length = img.get("FocalLength")
+    exposure_time = img.get("ExposureTime")
+    iso = img.get("ISOSpeedRatings") or img.get("PhotometricInterpretation")
+    flash = img.get("Flash")
+    width = img.get("ExifImageWidth")
+    height = img.get("ExifImageHeight")
+    gps_info = img.get("GPSInfo")
+    gps_cords = None
+    if gps_info:
+        try:
+            def _conv(coord):
+                return coord[0] + coord[1] / 60 + coord[2] / 3600
+            lat = _conv(gps_info[2])
+            long = _conv(gps_info[4])
+            gps_cords = (lat, long)
+        except Exception:
+            pass
+
+    meta_vals = {
+        "camera_make": camera_make,
+        "camera_model": camera_model,
+        "lens_model": lens_model,
+        "focal_length": focal_length,
+        "aperture": aperture,
+        "exposure_time": exposure_time,
+        "iso": iso,
+        "flash": flash,
+        "gps_coordinates": gps_cords,
+        "width": width,
+        "height": height,
+    }
+
+    meta, created = PhotoMetaData.objects.update_or_create(
+        photo_id = photo,
+        defaults = meta_vals
+    )
+    photo.status = "done"
+    photo.save(update_fields=["status"])
+    return meta
+
+class PhotoMetaDataExtractionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, photo_id):
+        photo = Photo.objects.get(photo_id=photo_id)
+        if photo.uploaded_by or photo.uploaded_by != request.user and not request.user.is_superuser:
+            return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            extract_and_save_metadata(photo)
+            from .serializers import PhotoSerializer
+            return Response({"detail": "Metadata extracted successfully","photo": PhotoSerializer(photo).data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class MyFavourite(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self,request):
+        likes = PhotoLike.objects.filter(user_id = request.user_id).select_related("photo_id").order_by("-created_at")
+        photos = [like.photo_id for like in likes]
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class MyTaggedView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        tags = PersonTag.objects.filter(user_id = request.user_id)
+        result = []
+        for tag in tags:
+            if tag.photo_id:
+                result.append(tag.photo_id.photo_id)
+            elif tag.album_id:
+                result.append(tag.album_id.album_id)
+            elif tag.event_id:
+                result.append(tag.event_id.event_id)
+        serializer = PhotoSerializer(result, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class MyAlbumView(APIView):
+    permission_classes =  [permissions.IsAuthenticated]
+
+    def get(self, request):
+        albums = Album.objects.filter(created_by = request.user).order_by("-created_at")
+        serializer = AlbumSerializer(albums, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class AdminAssignRole(APIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+    def post(self, request):
+        user_id = request.data.get("user_id")
+        role_id = request.data.get("role_id")
+        event_id = request.data.get("event_id")
+        if not user_id or not role_id or not event_id:
+            return Response({"message": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+        UserRole.objects.get_or_create(user_id = user_id, role_id = role_id, event_id = event_id)
+        return Response({"message": "Role assigned successfully"}, status=status.HTTP_200_OK)
+
+class PhotoSearch(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class= PhotoSerializer
+
+    def get_queryset(self):
+        qs = Photo.objects.all().order_by("-uploaded_at")
+        q= self.request.query_params.get('q')
+        event_id = self.request.query_params.get('event_id')
+        album_id = self.request.query_params.get('album_id')
+        photographer = self.request.query_params.get('photographer')
+        date_from = self.request.query_params.get('date_from')
+        date_to = self.request.query_params.get('date_to')
+
+        if q:
+            qs = qs.filter(
+                Q(album_id__album_name__icontains=q) | Q(uploaded_by__person_name__icontains = q)
+            )
+        if event_id:
+            qs= qs.filter(event_id__event_id = event_id)
+        elif album_id:
+            qs = qs.filter(album_id__album_id = album_id)
+        elif photographer:
+            qs = qs.filter(Q(uploaded_by__email_id__icontains = photographer) | Q(uploaded_by__person_name__icontains = photographer))
+        elif date_to:
+            qs = qs.filter(uploaded_at__lte = date_to)
+        elif date_from:
+            qs = qs.filter(uploaded_at__gte = date_from)
+        return qs
+
+
+

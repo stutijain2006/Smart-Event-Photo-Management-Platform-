@@ -16,7 +16,15 @@ from .views import (
     CreatePersonTag,
     RoleChangeRequestCreate,
     RoleChangeRequestList,
-    RoleChangeRequestReview
+    RoleChangeRequestReview,
+    PhotoUpload,
+    MultiplePhotoUpload,
+    PhotoMetaDataExtractionView,
+    MyFavourite,
+    MyAlbumView,
+    MyTaggedView,
+    AdminAssignRole,
+    PhotoSearch
 )
 
 urlpatterns =[
@@ -37,4 +45,13 @@ urlpatterns =[
     path("role-requests/", RoleChangeRequestCreate.as_view(), name="role-request-create"),
     path("role-requests/admin", RoleChangeRequestList.as_view(), name="role-request-list"),
     path("role-requests/<uuid:role_request_id>/review", RoleChangeRequestReview.as_view(), name="role-request-review"),
+    path("photos/upload", PhotoUpload.as_view(), name="photo-upload"),
+    path("photos/bulk-upload", MultiplePhotoUpload.as_view(), name="multiple-photo-upload"),
+    path("photos/<uuid:photo_id>/metadata-extraction", PhotoMetaDataExtractionView.as_view(), name="photo-metadata-extraction"),
+    path("my/favourite", MyFavourite.as_view(), name="my-favourite"),
+    path("my/albums", MyAlbumView.as_view(), name="my-albums"),
+    path("my/tags", MyTaggedView.as_view(), name="my-tags"),
+    path("admin/assign-role", AdminAssignRole.as_view(), name="admin-assign-role"),
+    path("photos/search", PhotoSearch.as_view(), name="photo-search"),
+
 ]
