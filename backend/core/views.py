@@ -2,8 +2,10 @@ import uuid
 from django.contrib.auth import login , logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from rest_framework import status,generics,  permissions
-from .models import Person , EmailOTP , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download
+from django.db import transaction
+from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -14,7 +16,10 @@ from .serializers import (
     EventSerializer,
     PhotoLikeSerializer,
     CommentSerializer,
-    DownloadSerializer
+    DownloadSerializer,
+    PersonTagSerializer,
+    AlbumAddPhotoSerializer,
+    RoleChangeRequestSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -38,7 +43,7 @@ class RegisterView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
         otp = generate_otp()
-        EmailOTP.objects.create(user=user, otp=otp)
+        EmailOTP.objects.create(email_id=user.email_id, otp=otp)
         return Response({'otp': otp}, {"message": "User created successfully"}, status=status.HTTP_201_CREATED)
     
 class VerifyEmail(APIView):
@@ -85,7 +90,7 @@ class LogOut(APIView):
         return Response ({"message": "User logged out successfully"}, status=status.HTTP_200_OK)
     
 class OmniportLoginURLView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     def get(self, request):
         state = uuid.uuid4().hex
         request.session['state'] = state
@@ -100,7 +105,7 @@ class OmniportCallBackView(APIView):
 
         if not code or not state:
             return Response({'error': 'Missing code or state'}, status=status.HTTP_400_BAD_REQUEST)
-        expected_state = request.session.get('omniport_state')
+        expected_state = request.session.get('state')
         if not expected_state or expected_state != state:
             return Response({'error': 'Invalid state'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -151,7 +156,7 @@ class OmniportCallBackView(APIView):
         return Response({"message": "User logged in successfully"}, status=status.HTTP_200_OK)
     
 class EventListCreateView(generics.ListCreateAPIView):
-    queryset = Events.objects.all().order_by(-"start_time")
+    queryset = Events.objects.all().order_by("-start_time")
     serializer_class = EventSerializer
 
     def get_permission(self, request, view, obj=None):
@@ -163,7 +168,7 @@ class EventListCreateView(generics.ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 class AlbumListCreateView(generics.ListCreateAPIView):
-    queryset = Album.objects.all().order_by(-"created_at")
+    queryset = Album.objects.all().order_by("-created_at")
     serializer_class = AlbumSerializer
 
     def get_permissions(self):
@@ -182,7 +187,7 @@ class AlbumListCreateView(generics.ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 class PhotoListCreateView(generics.ListCreateAPIView):
-    queryset = Photo.objects.all().order_by(-"uploaded_at")
+    queryset = Photo.objects.all().order_by("-uploaded_at")
     serializer_class = PhotoSerializer
 
     def get_permissions(self):
@@ -204,7 +209,7 @@ class PhotoListCreateView(generics.ListCreateAPIView):
         serializer.save(uploaded_by = self.request.user)
 
 class PhotoCommentListCreateView(generics.ListCreateAPIView):
-    queryset = Comments.objects.all().order_by(-"created_at")
+    queryset = Comments.objects.all().order_by("-created_at")
     serializer_class = CommentSerializer
 
     def get_permissions(self):
@@ -221,7 +226,7 @@ class PhotoCommentListCreateView(generics.ListCreateAPIView):
         serializer.save(photo_id=photo_id, user_id=self.request.user)
 
 class PhotoLike(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated | IsNotUser]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)
         user = request.user
@@ -258,3 +263,95 @@ class DownloadPhoto(APIView):
         serializer = DownloadSerializer(download)
         return Response(serializer.data, status=status.HTTP_200_OK)        
         
+class AlbumPhotoManage(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, album_id):
+        album = Album.objects.get(album_id=album_id)
+        if album.created_by != request.user and not request.user.is_superuser:
+            return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
+        serializer = AlbumAddPhotoSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        photo_id = serializer.validated_data['photo_id']
+        photo = Photo.objects.get(photo_id=photo_id)
+        album.photos.add(photo)
+        return Response({"message": "Photo added to album successfully"}, status=status.HTTP_200_OK)
+    
+    def delete(self, request, album_id):
+        album = Album.objects.get(album_id=album_id)
+        if album.created_by != request.user:
+            return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
+        serializer = AlbumAddPhotoSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        photo_id = serializer.validated_data['photo_id']
+        photo = Photo.objects.get(photo_id=photo_id)
+        album.photos.remove(photo)
+        return Response({"message": "Photo removed from album successfully"}, status=status.HTTP_200_OK)
+    
+class CreatePersonTag(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        user_to_tag_id = request.data.get("user_id")
+        typ = request.data.get("type")
+        object_id = request.data.get("object_id")
+
+        if not (user_to_tag_id and typ and object_id):
+            return Response({"message": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+        typ = typ.strip().lower()
+        
+        from .permissions import user_has_role
+        if not (user_has_role(request.user, "ADMIN") or user_has_role(request.user, "EVENT_MANAGER") or user_has_role(request.user, "PHOTOGRAPHER")):
+            return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
+        
+        target_user = get_object_or_404(Person, user_id=user_to_tag_id)
+        
+        if typ == "photo":
+            photo = Photo.objects.get(photo_id=object_id)
+            PersonTag.objects.create(user_id=target_user, photo_id=photo, album_id = None, event_id = None, tagged_by = request.user)
+        elif typ == "album":
+            album = Album.objects.get(album_id=object_id)
+            PersonTag.objects.create(user_id=target_user, tagged_by = request.user, album_id=album, photo_id = None, event_id = None)
+        elif typ == "event":
+            event = Events.objects.get(event_id=object_id)
+            PersonTag.objects.create(user_id=target_user, tagged_by = request.user, album_id = None, photo_id = None, event_id=event)
+        else:
+            return Response({"message": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({"message": "Person tag created successfully"}, status=status.HTTP_200_OK)
+    
+class RoleChangeRequestCreate(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = RoleChangeRequest.objects.all()
+    serializer_class = RoleChangeRequestSerializer
+    
+    def perform_create(self, sequelizer):
+        sequelizer.save(user_id=self.request.user, status = "PENDING")
+
+class RoleChangeRequestList(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    queryset = RoleChangeRequest.objects.all().order_by("-created_at")
+    serializer_class = RoleChangeRequestSerializer
+
+
+class RoleChangeRequestReview(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, request_id):
+        action = request.data.get("status")
+        action = action.strip().lower()
+        if action not in ("pending", "approve"):
+            return Response({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+        request = get_object_or_404(RoleChangeRequest, request_id=request_id)
+        if action == "approve":
+            with transaction.atomic():
+                UserRole.objects.get_or_create(
+                    user_id = request.user_id,
+                    role_id = request.target_role_id,
+                    event_id = request.event_id
+                )
+                request.approve(request.reviewed_by)
+            return Response({"message": "Role change request approved successfully"}, status=status.HTTP_200_OK)
+        else:
+            request.reject(request.reviewed_by)
+            return Response({"message": "Role change request rejected successfully"}, status=status.HTTP_200_OK)

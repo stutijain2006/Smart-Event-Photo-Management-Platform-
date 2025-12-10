@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download
+from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -150,3 +150,29 @@ class DownloadSerializer(serializers.ModelSerializer):
             "created_at"
         ]
 
+class PersonTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonTag
+        fields =[
+            "person_tag_id",
+            "photo_id",
+            "user_id",
+            "tagged_by",
+            "created_at"
+        ]
+
+class RoleChangeRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoleChangeRequest
+        fields = [
+            "request_id",
+            "user_id",
+            "target_role_id",
+            "event_id",
+            "reason",
+            "status",
+            "created_at"
+        ]
+
+class AlbumAddPhotoSerializer(serializers.ModelSerializer):
+    photo_id = serializers.UUIDField()

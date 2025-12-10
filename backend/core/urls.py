@@ -11,7 +11,12 @@ from .views import (
     PhotoListCreateView,
     PhotoCommentListCreateView,
     PhotoLike,
-    DownloadPhoto
+    DownloadPhoto,
+    AlbumPhotoManage,
+    CreatePersonTag,
+    RoleChangeRequestCreate,
+    RoleChangeRequestList,
+    RoleChangeRequestReview
 )
 
 urlpatterns =[
@@ -27,4 +32,9 @@ urlpatterns =[
     path("photos/<uuid:photo_id>/comments/", PhotoCommentListCreateView.as_view(), name="photo-comment-list-create"),
     path("photos/<uuid:photo_id>/like/", PhotoLike.as_view(), name="photo-like"),
     path("photos/<uuid:photo_id>/download/", DownloadPhoto.as_view(), name="photo-download"),   
+    path("albums/<uuid:album_id>/photos/", AlbumPhotoManage.as_view(), name="album-manage"),
+    path("tags/person/", CreatePersonTag.as_view(), name="create-person-tag"),
+    path("role-requests/", RoleChangeRequestCreate.as_view(), name="role-request-create"),
+    path("role-requests/admin", RoleChangeRequestList.as_view(), name="role-request-list"),
+    path("role-requests/<uuid:role_request_id>/review", RoleChangeRequestReview.as_view(), name="role-request-review"),
 ]

@@ -1,7 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 import uuid
+from django.utils import timezone
 from .managers import PersonManager
 
 class Person (AbstractUser):
@@ -113,6 +116,8 @@ class Photo(models.Model):
     def __str__(self):
         return f"Photo: {self.photo_id}-{self.event_id}"
     
+Photo.add_to_class("albums", models.ManyToManyField(Album, related_name="photos", blank=True))
+    
 class PhotoMetaData(models.Model):
     photo_metadata_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     photo_id = models.OneToOneField("Photo", on_delete=models.CASCADE, related_name="photo_metadata")
@@ -147,6 +152,9 @@ class PhotoLike(models.Model):
     user_id = models.ForeignKey("Person", on_delete=models.CASCADE, null=False, blank=False, related_name="likes")
     created_at = models.DateField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('photo_id', 'user_id')
+
     def __str__(self):
         return f"{self.photo_id} Liked by {self.user_id}"
 
@@ -163,10 +171,48 @@ class Comments(models.Model):
     
 class PersonTag(models.Model):
     person_tag_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    photo_id = models.ForeignKey("Photo", on_delete=models.CASCADE, null=False, blank=False, related_name="person_tags")
+    photo_id = models.ForeignKey("Photo", on_delete=models.CASCADE, null=True, blank=True, related_name="person_tags")
+    album_id = models.ForeignKey("Album", on_delete=models.CASCADE, null=True, blank=True, related_name="person_tags")
+    event_id = models.ForeignKey("Events", on_delete=models.CASCADE, null=True, blank=True, related_name="person_tags")
     user_id = models.ForeignKey("Person", on_delete=models.CASCADE, null=False, blank=False, related_name="person_tags")
     tagged_by = models.ForeignKey("Person", on_delete=models.CASCADE, null=False, blank=False)
     created_at = models.DateField(auto_now_add=True)
 
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+
     def __str__(self):
         return f"{self.photo_id} Tagged by {self.user_id}"
+    
+class RoleChangeRequest(models.Model):
+    REQUEST_STATUS = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('DECLINED', 'Declined'),
+    )
+
+    request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_id = models.ForeignKey("Person", on_delete=models.CASCADE)
+    target_role_id = models.ForeignKey(Role, on_delete=models.CASCADE)
+    event_id = models.ForeignKey("Events", on_delete=models.CASCADE, null=True, blank=True)
+    reason = models.TextField(max_length=500)
+    status = models.CharField(max_length=50, choices=REQUEST_STATUS, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(auto_now=True)
+    reviewed_by = models.ForeignKey("Person", on_delete=models.CASCADE, null=True, blank=True, related_name="reviewed_by")
+
+    def approve(self, reviewer):
+        self.status = 'APPROVED'
+        self.reviewed_by = reviewer
+        self.reviewed_at = timezone.now()
+        self.save()
+    
+    def reject(self, reviewer):
+        self.status = 'DECLINED'
+        self.reviewed_by = reviewer
+        self.reviewed_at = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return f"Role Change Request: {self.user_id} to {self.target_role_id}"
