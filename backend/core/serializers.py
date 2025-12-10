@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Person , Events , Album , Photo , EmailOTP
+from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,6 +37,7 @@ class EventSerializer(serializers.ModelSerializer):
 class AlbumSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name")
     class Meta:
+        model = Album
         fields = [
             "album_id",
             "event_id",
@@ -49,6 +50,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 class PhotoSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name") 
     class Meta:
+        model = Photo
         fields = [
             "photo_id",
             "event_id",
@@ -90,6 +92,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
  
 class VerifyEmailSerializer(serializers.Serializer):
+    model = EmailOTP
     email_id = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
 
@@ -111,4 +114,39 @@ class LoginSerializer(serializers.Serializer):
 
         data["user"] = user
         return data
+
+class PhotoLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhotoLike
+        fields = [
+            "like_id",
+            "photo_id",
+            "user_id",
+            "created_at"
+        ]
+
+class CommentSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source="user_id.person_name")
+    class Meta:
+        model = Comments
+        fields = [
+            "comment_id",
+            "photo_id",
+            "user_id",
+            "user_name",
+            "description",
+            "created_at",
+            "updated_at"
+        ]
+
+class DownloadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Download
+        fields = [
+            "download_id",
+            "photo_id",
+            "user_id",
+            "variant",
+            "created_at"
+        ]
 

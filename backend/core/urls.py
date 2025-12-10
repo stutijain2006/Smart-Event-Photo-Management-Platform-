@@ -8,7 +8,10 @@ from .views import (
     OmniportCallBackView,
     EventListCreateView,
     AlbumListCreateView,
-    PhotoListCreateView
+    PhotoListCreateView,
+    PhotoCommentListCreateView,
+    PhotoLike,
+    DownloadPhoto
 )
 
 urlpatterns =[
@@ -21,4 +24,7 @@ urlpatterns =[
     path("events/", EventListCreateView.as_view(), name="event-list-create"),
     path("albums/", AlbumListCreateView.as_view(), name="album-list-create"),
     path("photos/", PhotoListCreateView.as_view(), name="photo-list-create"),
+    path("photos/<uuid:photo_id>/comments/", PhotoCommentListCreateView.as_view(), name="photo-comment-list-create"),
+    path("photos/<uuid:photo_id>/like/", PhotoLike.as_view(), name="photo-like"),
+    path("photos/<uuid:photo_id>/download/", DownloadPhoto.as_view(), name="photo-download"),   
 ]

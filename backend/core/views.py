@@ -3,7 +3,7 @@ from django.contrib.auth import login , logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status,generics,  permissions
-from .models import Person , EmailOTP , OmniportAccount, Photo, Album, Events
+from .models import Person , EmailOTP , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -11,11 +11,15 @@ from .serializers import (
     PersonSerializer,
     PhotoSerializer,
     AlbumSerializer,
-    EventSerializer
+    EventSerializer,
+    PhotoLikeSerializer,
+    CommentSerializer,
+    DownloadSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
-    IsPhotographerOrAdmin
+    IsPhotographerOrAdmin,
+    IsNotUser
 )
 from .utils import (
     generate_otp,
@@ -198,3 +202,59 @@ class PhotoListCreateView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         serializer.save(uploaded_by = self.request.user)
+
+class PhotoCommentListCreateView(generics.ListCreateAPIView):
+    queryset = Comments.objects.all().order_by(-"created_at")
+    serializer_class = CommentSerializer
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return permissions.AllowAny()
+        return[permissions.IsAuthenticated(), IsNotUser()]
+    
+    def get_queryset(self):
+        photo_id = self.kwargs('photo_id')
+        return Comments.objects.filter(photo_id=photo_id).order_by('-created_at')
+    
+    def perform_create(self, serializer):
+        photo_id = self.kwargs('photo_id')
+        serializer.save(photo_id=photo_id, user_id=self.request.user)
+
+class PhotoLike(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, photo_id):
+        photo = Photo.objects.get(photo_id=photo_id)
+        user = request.user
+        existing = PhotoLike.objects.filter(photo_id=photo, user_id=user).first()
+
+        if existing:
+            existing.delete()
+            photo.like_count = PhotoLike.objects.filter(photo_id=photo).count()
+            photo.save(update_fields=["like_count"])
+            return Response({"message": "Like removed successfully"}, status=status.HTTP_200_OK)
+        else:
+            like = PhotoLike.objects.create(photo_id=photo, user_id=user)
+            photo.like_count = PhotoLike.objects.filter(photo_id=photo).count()
+            photo.save(update_fields=["like_count"])
+            serializer = PhotoLikeSerializer(like)
+            return Response({"message": "Like added successfully"}, status=status.HTTP_200_OK)
+
+class DownloadPhoto(APIView):
+    permission_classes = [permissions.IsAuthenticated | IsNotUser]
+    def post(self, request, photo_id):
+        photo = Photo.objects.get(photo_id=photo_id)
+        user = request.user
+        variant = request.data.get("variant")
+        if variant == "original":
+            file_url = Photo.file_path_original
+        elif variant == "watermarked":
+            file_url = Photo.file_path_watermarked or Photo.file_path_original
+        else:
+            file_url = Photo.file_path_thumbnail or Photo.file_path_original
+
+        download = Download.objects.create(photo_id=photo, user_id=user, variant=variant)
+        photo.download_count = Download.objects.filter(photo_id=photo).count()
+        photo.save(update_fields=["download_count"])
+        serializer = DownloadSerializer(download)
+        return Response(serializer.data, status=status.HTTP_200_OK)        
+        

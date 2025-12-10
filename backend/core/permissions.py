@@ -44,3 +44,12 @@ class IsPhotographerOrAdmin(BasePermission):
             user_has_role(user, ROLE_PHOTOGRAPHER)
         )
     
+class IsNotUser(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        user = request.user
+        return user.is_authenticated and (
+            not user_has_role(user, ROLE_USER)
+        )
+    
