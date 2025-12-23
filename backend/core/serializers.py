@@ -90,6 +90,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.is_email_verified = False
         user.save()
         return user
+    
+    def validate_email_id(self, value):
+        existing = Person.objects.filter(email_id=value).first()
+        if existing and existing.is_email_verified:
+            raise serializers.ValidationError("Email is already registered and verified.")
+        return value
  
 class VerifyEmailSerializer(serializers.Serializer):
     model = EmailOTP
