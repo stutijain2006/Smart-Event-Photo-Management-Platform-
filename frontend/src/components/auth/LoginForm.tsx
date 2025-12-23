@@ -4,6 +4,7 @@ import { useAppDispatch } from "../../app/hooks";
 import api from "../../services/api";
 import { fetchMe } from "../../features/auth/authslice";
 
+
 export default function LoginForm() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -17,17 +18,23 @@ export default function LoginForm() {
             await dispatch(fetchMe());
             navigate("/dashboard");
         } catch (err: any) {
-            setError(err.response?.data?.message || "Login failed");
+            const data = err.response?.data;
+            if (data?.email_id) {
+                alert(`Email Error: ${data.email_id.join(" ")}`);
+            } else if (data?.password) {
+                alert(`Password Error: ${data.password.join(" ")}`);
+            } else {
+                alert("Login failed. Please try again.");
+            }
         }
     };
 
     return (
-        <div>
-            <h2>Login</h2>
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <button onClick={login}>Login</button>
-            {error && <p className="text-red-500">{error}</p>}
+        <div className="flex flex-col justify-center items-center gap-4">
+            <h2 className="text-[1.5rem] font-bold">Login</h2>
+            <input type="email" placeholder="Email" value={email} className="text-[1rem] px-4 py-2 border border-black bg-grey-300 font-medium" onChange={(e) => setEmail(e.target.value)} />
+            <input type="password" placeholder="Password" value={password} className="text-[1rem] px-4 py-2 border border-black bg-grey-300 font-medium" onChange={(e) => setPassword(e.target.value)} />
+            <button onClick={login} className="text-[1rem] px-4 py-2 border border-black bg-grey-300 font-medium">Login</button>
         </div>
     );
 }

@@ -33,7 +33,7 @@ export default function Register() {
 
     return (
         <div className="flex flex-col justify-center items-center gap-4">
-            <h2>Register</h2>
+            <h2 className="text-[1.5rem] font-bold">Register</h2>
             <input type="text" placeholder="Name" value={name} className="text-[1rem] px-4 py-2 border border-black bg-grey-300 font-medium" onChange={(e) => setName(e.target.value)}/>
             <input type="email" placeholder="Email" value={email} className="text-[1rem] px-4 py-2 border border-black bg-grey-300 font-medium" onChange={(e) => setEmail(e.target.value)}/>
             <input type="password" placeholder="Password" value={password} className="text-[1rem] px-4 py-2 border border-black bg-grey-300 font-medium" onChange={(e) => setPassword(e.target.value)}/>
