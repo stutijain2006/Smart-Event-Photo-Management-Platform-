@@ -24,7 +24,8 @@ from .views import (
     MyAlbumView,
     MyTaggedView,
     AdminAssignRole,
-    PhotoSearch
+    PhotoSearch,
+    MeView,
 )
 
 urlpatterns =[

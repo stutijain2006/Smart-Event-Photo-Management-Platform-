@@ -11,7 +11,7 @@ export default function VerifyEmailForm() {
 
     const handleSubmit = async() => {
         try{
-            await api.post("auth/verify-email", {
+            await api.post("/auth/verify-email", {
                 email_id : email,
                 otp
             });

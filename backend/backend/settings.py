@@ -12,11 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+load_dotenv(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -43,10 +44,10 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = "core.Person"
-OMNIPORT_BASE_URL = "base_url"
-OMNIPORT_CLIENT_ID = "your_client_id"
-OMNIPORT_CLIENT_SECRET = "your_client_secret"
-OMNIPORT_REDIRECT_URI = "your_redirect_url"
+OMNIPORT_BASE_URL = os.getenv("OMNIPORT_BASE_URL")
+OMNIPORT_CLIENT_ID = os.getenv("OMNIPORT_CLIENT_ID")
+OMNIPORT_CLIENT_SECRET = os.getenv("OMNIPORT_CLIENT_SECRET")
+OMNIPORT_REDIRECT_URI = os.getenv("OMNIPORT_REDIRECT_URI")
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

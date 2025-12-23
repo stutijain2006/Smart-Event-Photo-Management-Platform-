@@ -1,14 +1,22 @@
 import {Routes, Route} from 'react-router-dom';
-import Register from "../components/auth/RegisterEmailForm";
-//import Login from "../pages/auth/Login";
-//import VerifyOTP from "../pages/auth/VerifyOTP";
-import ProtectedRoute from '../components/routing/ProtectedRoute'; 
+import ProtectedRoute from '../components/routing/ProtectedRoute';
 import RoleGuard from '../components/routing/RoleGuard';
+import RegisterPage from '../pages/auth/RegisterPage';
+import LoginPage from '../pages/auth/LoginPage';
+import VerifyEmailForm from '../components/auth/VerifyEmailForm';
+import OmniportCallBack from '../components/auth/OmniportCallBack';
+import Unauthorized from "../pages/errors/Unauthorized";
 
 export default function AppRoutes() {
     return (
         <Routes>
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/verify-email" element={<VerifyEmailForm />} />
+            <Route path="/omniport/callback" element={<OmniportCallBack />} />
+
+            <Route path="/unauthorized" element={<Unauthorized />} />
+
         </Routes>
     );
 }

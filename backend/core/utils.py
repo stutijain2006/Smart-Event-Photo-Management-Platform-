@@ -8,7 +8,7 @@ def generate_otp() -> str:
 def get_omniport_authorize_url(state: str) -> str:
     base = settings.OMNIPORT_BASE_URL.strip("/")
     return (
-        f"{base}/oath/authorize/?"
+        f"{base}/oauth/authorize/?"
         f"client_id={settings.OMNIPORT_CLIENT_ID}"
         f"&redirect_uri={settings.OMNIPORT_REDIRECT_URI}"
         f"&state={state}"

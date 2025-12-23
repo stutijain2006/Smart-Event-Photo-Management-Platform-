@@ -1,10 +1,12 @@
 import React, {useState} from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
 export default function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
     const handleSubmit = async() => {
         await api.post("/auth/register", {
@@ -12,7 +14,7 @@ export default function Register() {
             email_id : email,
             password
         });
-        alert ("OTP sent to your email");
+        navigate("/verify-email", {state: {email}});
     }
 
     return (
