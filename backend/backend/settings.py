@@ -109,6 +109,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "photomanager",
+        "USER" : "postgres",
+        "PASSWORD" : "#Cherry01#",
+        "HOST" : "localhost",
+        "PORT" : "5432",
+    }
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

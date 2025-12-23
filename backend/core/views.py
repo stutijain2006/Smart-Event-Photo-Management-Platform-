@@ -582,5 +582,10 @@ class PhotoSearch(generics.ListAPIView):
             qs = qs.filter(uploaded_at__gte = date_from)
         return qs
 
+class MeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-
+    def get(self, request):
+        user = request.user
+        roles = UserRole.objects.filter(user_id = user.user_id).select_related("role_id").select_related("event_id")
+        return Response({"user_id": str(user.user_id), "email_id" : user.email_id, "person_name": user.person_name, "roles": list(roles), "is_email_verified": user.is_email_verified  })

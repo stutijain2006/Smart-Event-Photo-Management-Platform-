@@ -53,5 +53,5 @@ urlpatterns =[
     path("my/tags", MyTaggedView.as_view(), name="my-tags"),
     path("admin/assign-role", AdminAssignRole.as_view(), name="admin-assign-role"),
     path("photos/search", PhotoSearch.as_view(), name="photo-search"),
-
+    path("auth/me/", MeView.as_view(), name="me"),
 ]
