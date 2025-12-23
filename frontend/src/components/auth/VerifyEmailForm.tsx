@@ -23,11 +23,11 @@ export default function VerifyEmailForm() {
     };
 
     return(
-        <div className="flex flex-col justify-center items-center gap-4">
-            <h2>Verify Email</h2>
-            <input type="text" placeholder="OTP" value={otp} onChange={(e) => setOtp(e.target.value)}/>
-            <button onClick={handleSubmit}>Verify</button>
-            {error && <p className="text-red-500">{error}</p>}
+        <div className="flex flex-col justify-center items-center gap-4 w-[50vw] h-[50vh] border border-black rounded-lg shadow-lg p-8">
+            <h2 className='text-[1.2rem] font-bold'>Verify Email</h2>
+            <input className='w-[30vw] px-4 py-2 border text-[1rem] bg-gray-300 border-black rounded-lg shadow-lg' type="text" placeholder="OTP" value={otp} onChange={(e) => setOtp(e.target.value)}/>
+            <button className='w-[30vw] px-4 py-2 border text-[1rem] bg-gray-300 border-black rounded-lg shadow-lg' onClick={handleSubmit}>Verify</button>
+            {error && <p className="text-red-500 text-[0.8rem] ">{error}</p>}
         </div>
     );
 }

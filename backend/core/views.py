@@ -2,7 +2,7 @@ import uuid
 import os
 import io
 from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
+from django.core.mail import send_mail
 from django.conf import settings
 from PIL import Image, ExifTags
 from django.db.models import Q
@@ -51,7 +51,17 @@ class RegisterView(APIView):
         user = serializer.save()
         otp = generate_otp()
         EmailOTP.objects.create(email_id=user.email_id, otp=otp)
-        return Response({'otp': otp}, {"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+        send_mail(
+            'Verify your email',
+            f'Your OTP for email verification is: {otp}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email_id],
+            fail_silently=False,
+        )
+        return Response({
+            "message": "User registered successfully. Please verify your email.",
+            "otp": otp
+        }, status=status.HTTP_201_CREATED)
     
 class VerifyEmail(APIView):
     permissions_classes = [permissions.AllowAny]
@@ -589,3 +599,5 @@ class MeView(APIView):
         user = request.user
         roles = UserRole.objects.filter(user_id = user.user_id).select_related("role_id").select_related("event_id")
         return Response({"user_id": str(user.user_id), "email_id" : user.email_id, "person_name": user.person_name, "roles": list(roles), "is_email_verified": user.is_email_verified  })
+
+
