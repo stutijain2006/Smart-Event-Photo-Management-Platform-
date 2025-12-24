@@ -6,6 +6,7 @@ import LoginPage from '../pages/auth/LoginPage';
 import VerifyEmailForm from '../components/auth/VerifyEmailForm';
 import OmniportCallBack from '../components/auth/OmniportCallBack';
 import Unauthorized from "../pages/errors/Unauthorized";
+import DashboardRoute from '../pages/dashboard/DashboardRoute';
 
 export default function AppRoutes() {
     return (
@@ -14,6 +15,14 @@ export default function AppRoutes() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/verify-email" element={<VerifyEmailForm />} />
             <Route path="/omniport/callback" element={<OmniportCallBack />} />
+            <Route
+                path="/dashboard/*"
+                element={
+                    <ProtectedRoute>
+                        <DashboardRoute />
+                    </ProtectedRoute>
+                }
+            />
 
             <Route path="/unauthorized" element={<Unauthorized />} />
 
