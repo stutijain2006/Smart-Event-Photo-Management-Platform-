@@ -372,18 +372,18 @@ class RoleChangeRequestReview(APIView):
         action = action.strip().lower()
         if action not in ("pending", "approve"):
             return Response({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
-        request = get_object_or_404(RoleChangeRequest, request_id=request_id)
+        role_request = get_object_or_404(RoleChangeRequest, request_id=request_id)
         if action == "approve":
             with transaction.atomic():
                 UserRole.objects.get_or_create(
-                    user_id = request.user_id,
-                    role_id = request.target_role_id,
-                    event_id = request.event_id
+                    user_id = role_request.user_id,
+                    role_id = role_request.target_role_id,
+                    event_id = role_request.event_id
                 )
-                request.approve(request.reviewed_by)
+                role_request.approve(role_request.user)
             return Response({"message": "Role change request approved successfully"}, status=status.HTTP_200_OK)
         else:
-            request.reject(request.reviewed_by)
+            role_request.reject(role_request.reviewed_by)
             return Response({"message": "Role change request rejected successfully"}, status=status.HTTP_200_OK)
         
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import {useNavigate} from 'react-router-dom';
-import AppLogo from '../../assets/logo.svg';
+import AppLogo from '../../assets/logo.png';
 
 export default function TopBar() {
     const navigate = useNavigate();

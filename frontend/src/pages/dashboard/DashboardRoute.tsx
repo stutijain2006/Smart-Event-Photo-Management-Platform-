@@ -1,5 +1,5 @@
 import { useAppSelector } from "../../app/hooks";
-import AdminDashboard from './AdminDashboard';
+/*import AdminDashboard from './AdminDashboard';
 import UserDashboard from './UserDashboard';
 import PhotographerDashboard from './PhotographerDashboard';
 import EventManagerDashboard from './EventManagerDashboard';
@@ -18,4 +18,4 @@ export default function DashboardRoute() {
         return <EventManagerDashboard />;
     }
     return <UserDashboard />;
-}
+}*/
