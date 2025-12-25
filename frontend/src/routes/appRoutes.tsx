@@ -8,6 +8,8 @@ import OmniportCallBack from '../components/auth/OmniportCallBack';
 import Unauthorized from "../pages/errors/Unauthorized";
 //import DashboardRoute from '../pages/dashboard/DashboardRoute';
 import ProfilePage from '../pages/profile/ProfilePage';
+import EventPage from '../pages/events/EventPage';
+import EventDetailPage from '../pages/events/EventDetailPage';
 
 export default function AppRoutes() {
     return (
@@ -23,6 +25,17 @@ export default function AppRoutes() {
                 </ProtectedRoute>
             } />
 
+            <Route path="/events" element={
+                <ProtectedRoute>
+                    <EventPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/events/:eventId" element={
+                <ProtectedRoute>
+                    <EventDetailPage />
+                </ProtectedRoute>
+            } />
 
             <Route path="/unauthorized" element={<Unauthorized />} />
 
