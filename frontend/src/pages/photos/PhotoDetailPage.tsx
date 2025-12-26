@@ -7,11 +7,16 @@ export default function PhotoDetailPage(){
     const { photoId } = useParams();
     const navigate = useNavigate();
     const [photo, setPhoto] = useState<any>(null);
-    const [comments, useComments] = useState<any[]>([]);
+    const [showShare, setShowShare] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
+    const [showDownload, setShowDownload] = useState(false);
+    const [showComments, setShowComments] = useState(false);
+    const [metadata, setMetadata] = useState<any>(null);
+    const [comments, setComments] = useState<any[]>([]);
 
     useEffect(() => {
-        api.get(`/photos/`).then(res => setPhoto(res.data.find((photo: any) => photo.photo_id === Number(photoId))));
-        api.get(`/photos/${photoId}/comments`).then(res => useComments(res.data));
+        api.get(`/photos/`).then(res => setPhoto(res.data.find((photo: any) => photo.photo_id === photoId)));
+        api.get(`/photos/${photoId}/comments`).then(res => setComments(res.data));
     }, [photoId]);
 
     const likePhoto = async() => {
