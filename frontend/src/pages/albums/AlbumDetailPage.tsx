@@ -2,7 +2,7 @@ import  {useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
-import PhotoCard from "../dashboard/widgets/PhotoCard";
+import PhotoCard from "../../components/photos/PhotoCard";
 
 export default function AlbumDetailPage() {
     const { albumId } = useParams();
