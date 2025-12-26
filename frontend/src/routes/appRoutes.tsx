@@ -6,10 +6,13 @@ import LoginPage from '../pages/auth/LoginPage';
 import VerifyEmailForm from '../components/auth/VerifyEmailForm';
 import OmniportCallBack from '../components/auth/OmniportCallBack';
 import Unauthorized from "../pages/errors/Unauthorized";
-//import DashboardRoute from '../pages/dashboard/DashboardRoute';
+import DashboardHome from '../pages/dashboard/DashboardHome';
 import ProfilePage from '../pages/profile/ProfilePage';
 import EventPage from '../pages/events/EventPage';
 import EventDetailPage from '../pages/events/EventDetailPage';
+import AlbumsPage from '../pages/albums/AlbumsPage';
+import AlbumDetailPage from '../pages/albums/AlbumDetailPage';
+import PhotoDetailPage from '../pages/photos/PhotoDetailPage';
 
 export default function AppRoutes() {
     return (
@@ -18,6 +21,12 @@ export default function AppRoutes() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/verify-email" element={<VerifyEmailForm />} />
             <Route path="/omniport/callback" element={<OmniportCallBack />} />
+
+            <Route path="/" element={
+                <ProtectedRoute >
+                    <DashboardHome />
+                </ProtectedRoute>
+            } />
 
             <Route path="/profile" element={
                 <ProtectedRoute>
@@ -36,6 +45,32 @@ export default function AppRoutes() {
                     <EventDetailPage />
                 </ProtectedRoute>
             } />
+
+            <Route path="/albums" element={
+                <ProtectedRoute>
+                    <AlbumsPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/albums/:albumId" element={
+                <ProtectedRoute>
+                    <AlbumDetailPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/photos/:photoId" element={
+                <ProtectedRoute>
+                    <PhotoDetailPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/admin/people" element={
+                <ProtectedRoute>
+                    <RoleGuard allowedRoles={["ADMIN"]} >
+                        <AdminPeoplePage />
+                    </RoleGuard>
+                </ProtectedRoute>
+            }
 
             <Route path="/unauthorized" element={<Unauthorized />} />
 

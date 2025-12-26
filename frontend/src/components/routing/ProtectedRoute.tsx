@@ -4,6 +4,12 @@ import { useAppSelector } from '../../app/hooks';
 
 export default function ProtectedRoute({ children }: { children: JSX.Element }) {
     const{isAuthenticated, loading} = useAppSelector((state) => state.auth);
+    const DEV_BYPASS_AUTH = true;
+
+    if (DEV_BYPASS_AUTH){
+        return children;
+    }
+
     if (loading) {
         return <div>Loading...</div>;
     }
