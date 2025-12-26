@@ -13,6 +13,7 @@ import EventDetailPage from '../pages/events/EventDetailPage';
 import AlbumsPage from '../pages/albums/AlbumsPage';
 import AlbumDetailPage from '../pages/albums/AlbumDetailPage';
 import PhotoDetailPage from '../pages/photos/PhotoDetailPage';
+import AdminPeoplePage from '../pages/admin/AdminPeoplePage';
 
 export default function AppRoutes() {
     return (
@@ -62,15 +63,15 @@ export default function AppRoutes() {
                 <ProtectedRoute>
                     <PhotoDetailPage />
                 </ProtectedRoute>
-            } />
+            } />            
 
             <Route path="/admin/people" element={
                 <ProtectedRoute>
-                    <RoleGuard allowedRoles={["ADMIN"]} >
+                    <RoleGuard allowedRoles={['ADMIN']} >
                         <AdminPeoplePage />
                     </RoleGuard>
                 </ProtectedRoute>
-            }
+            } />
 
             <Route path="/unauthorized" element={<Unauthorized />} />
 

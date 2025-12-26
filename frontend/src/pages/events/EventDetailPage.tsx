@@ -2,9 +2,15 @@ import { useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import { useAppSelector } from "../../app/hooks";
 
 export default function EventDetailPage() {
     const { eventId } = useParams();
+    const { user } = useAppSelector((state: any) => state.auth);
+    const roles = user?.roles || [];
+
+    const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");
+
     const [eventDetails, setEventDetails] = useState<any>(null);
     const [albums, setAlbums] = useState<any[]>([]);    
     const [photos, setPhotos] = useState<any[]>([]);
@@ -31,7 +37,15 @@ export default function EventDetailPage() {
                 <h2 className='text-[1.4rem] font-bold'>
                     {eventDetails.event_name}
                 </h2>
+                {canManage && (
+                    <div className="flex gap-3">
+                        <button className="text-[1.2rem] font-semibold px-4 py-2 rounded-lg">+ Create Album</button>
+                    </div>
+                )}
             </div>
+            <button className="bg-gray-300 px-4 py-2 w-[60vw] h-[30vh] rounded-lg">
+                + Add Photos
+            </button>
             <div className="flex flex-col items-start justify-center gap-6">
                 <div className="text-[1.1rem] font-semibold mb-2">Albums</div>
                 <div className="grid grid-cols-1 gap-4 mb-4">

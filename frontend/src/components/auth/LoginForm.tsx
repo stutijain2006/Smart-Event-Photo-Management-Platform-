@@ -16,7 +16,7 @@ export default function LoginForm() {
         try{
             await api.post("/auth/login", { email_id : email, password });
             await dispatch(fetchMe());
-            navigate("/dashboard");
+            navigate("/");
         } catch (err: any) {
             const data = err.response?.data;
             if (data?.email_id) {
