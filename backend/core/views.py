@@ -337,6 +337,14 @@ class CreatePersonTag(APIView):
             return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
         
         target_user = get_object_or_404(Person, user_id=user_to_tag_id)
+
+        exists = PersonTag.objects.filter(user_id=target_user, 
+                                          photo_id = photo if typ == "photo" else None,
+                                          album_id = album if typ == "album" else None,
+                                          event_id = event if typ == "event" else None
+                                          ).exists()
+        if exists:
+            return Response({"message": "Person tag already exists"}, status=status.HTTP_400_BAD_REQUEST)
         
         if typ == "photo":
             photo = Photo.objects.get(photo_id=object_id)

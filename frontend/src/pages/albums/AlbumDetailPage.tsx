@@ -4,12 +4,15 @@ import api from "../../services/api";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import PhotoCard from "../../components/photos/PhotoCard";
 import { useAppSelector } from "../../app/hooks";
+import ShowTag from "../../components/tags/TagPeople";
+import Modal from "../../components/common/Modal";
 
 export default function AlbumDetailPage() {
     const { albumId } = useParams();
     const navigate = useNavigate();
     const [photos, setPhotos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
+    
 
     const user = useAppSelector((state) => state.auth.user);
     const roles = user?.roles || [];
