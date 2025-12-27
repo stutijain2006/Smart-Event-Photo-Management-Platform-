@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAppSelector } from "../../app/hooks";
 import api from "../../services/api";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import CommentsModal from "../../components/photos/CommentsModal";
@@ -7,10 +8,10 @@ import DownloadPhotoModal from "../../components/photos/DownloadPhotoModal";
 import MetadataModal from "../../components/photos/MetadataModal";
 import ShareModal from "../../components/photos/ShareModal";
 import Modal from "../../components/common/Modal";
+import ShowTag from "../../components/tags/TagPeople";
 
 export default function PhotoDetailPage(){
-    const params = useParams();
-    const photoId = params.photoId;
+    const { photoId } = useParams<{ photoId: string }>();
     const navigate = useNavigate();
     const [photo, setPhoto] = useState<any>(null);
     const [showShare, setShowShare] = useState(false);
@@ -18,6 +19,12 @@ export default function PhotoDetailPage(){
     const [showDownload, setShowDownload] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState<any[]>([]);
+    const [showTag, setShowTag] = useState(false);
+
+    const user = useAppSelector((state) => state.auth.user);
+    const roles = user?.roles || [];
+    const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");
+
 
     const loadData= async() => {
         const photos= await api.get(`/photos/`);
@@ -63,7 +70,12 @@ export default function PhotoDetailPage(){
                         <button onClick={() => setShowDetails(true)} className="bg-gray-300 p-2 rounded-lg"> 👀 Details</button>
                         <button onClick={() => setShowDownload(true)} className="bg-gray-300 p-2 rounded-lg"> ⬇ Download ({photo.download_count})</button>
                     </div>
-                    <div className="bg-gray-300 p-2 rounded-lg" onClick={() => setShowComments(true)} > Comments</div>
+                    <div className="flex justify-center items-center gap-4">
+                        <button className="bg-gray-300 p-2 rounded-lg" onClick={() => setShowComments(true)} > Comments</button>
+                        {canManage && (
+                            <button onClick={() => setShowTag(true)} className="bg-gray-300 p-2 rounded-lg">Tag People</button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -72,6 +84,7 @@ export default function PhotoDetailPage(){
             <Modal isOpen={showDownload} onClose={() => setShowDownload(false)}><DownloadPhotoModal onDownload = {downloadPhoto} /></Modal>
             <Modal isOpen={showComments} onClose={() => setShowComments(false)}><CommentsModal 
             photoId={photoId} refresh={loadData} comments={comments} /></Modal>
+            <Modal isOpen={showTag} onClose={() => setShowTag(false)}><ShowTag type="photo" objectId={photoId!} onClose={() => setShowTag(false)} /></Modal>
         </DashboardLayout>
     );
 }

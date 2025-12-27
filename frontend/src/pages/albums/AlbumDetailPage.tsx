@@ -8,15 +8,24 @@ import ShowTag from "../../components/tags/TagPeople";
 import Modal from "../../components/common/Modal";
 
 export default function AlbumDetailPage() {
-    const { albumId } = useParams();
+    const { albumId } = useParams<{ albumId: string }>();
     const navigate = useNavigate();
     const [photos, setPhotos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
-    
+    const [showTag, setShowTag] = useState(false);
+
 
     const user = useAppSelector((state) => state.auth.user);
     const roles = user?.roles || [];
     const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");
+
+    if (!albumId){
+        return (
+            <DashboardLayout>
+                <div> Invalid Album</div>
+            </DashboardLayout>
+        )
+    }
 
     useEffect(() => {
         api.get(`/photos/?album_id=${albumId}`).then(res => setPhotos(res.data)).catch(console.error);
@@ -36,7 +45,7 @@ export default function AlbumDetailPage() {
                 {canManage && (
                     <div className="flex flex-col justify-center items-center">
                         <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[40vw] h-[40vh] rounded-lg"> + Upload Photos</button>
-                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] h-[40vh] rounded-lg">+ Tag People</button>
+                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] h-[40vh] rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
                     </div>
                 )}
 
@@ -54,6 +63,7 @@ export default function AlbumDetailPage() {
                     </div>
                 )}
             </div>
+            <Modal isOpen={showTag} onClose={() => setShowTag(false)}><ShowTag  type="album" objectId={albumId} onClose = {() => setShowTag(false)} /></Modal>
         </DashboardLayout>
     );
 }
