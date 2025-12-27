@@ -182,3 +182,20 @@ class RoleChangeRequestSerializer(serializers.ModelSerializer):
 
 class AlbumAddPhotoSerializer(serializers.ModelSerializer):
     photo_id = serializers.UUIDField()
+
+class AdminPeopleSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="person_name")
+    email_id = serializers.EmailField(source="email_id")
+    roles = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Person
+        fields = [
+            "user_id",
+            "name",
+            "email_id",
+            "roles"
+        ]
+    
+    def get_roles(self, obj):
+        return [role.role_name for role in obj.roles.all()]

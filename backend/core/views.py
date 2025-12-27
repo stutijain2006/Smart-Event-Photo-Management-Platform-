@@ -27,11 +27,13 @@ from .serializers import (
     PersonTagSerializer,
     AlbumAddPhotoSerializer,
     RoleChangeRequestSerializer,
+    AdminPeopleSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
     IsPhotographerOrAdmin,
-    IsNotUser
+    IsNotUser,
+    IsAdmin
 )
 from .utils import (
     generate_otp,
@@ -613,4 +615,10 @@ class MeView(APIView):
         roles = UserRole.objects.filter(user_id = user.user_id).select_related("role_id").select_related("event_id")
         return Response({"user_id": str(user.user_id), "email_id" : user.email_id, "person_name": user.person_name, "roles": list(roles), "is_email_verified": user.is_email_verified  })
 
+class AdminPeople(APIView):
+    permission_classes= [permissions.IsAuthenticated, IsAdmin] 
+    def get(self, request):
+        people = Person.objects.all().order_by("person_name")
+        serializer = AdminPeopleSerializer(people, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

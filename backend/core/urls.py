@@ -26,6 +26,7 @@ from .views import (
     AdminAssignRole,
     PhotoSearch,
     MeView,
+    AdminPeople
 )
 
 urlpatterns =[
@@ -55,4 +56,5 @@ urlpatterns =[
     path("admin/assign-role", AdminAssignRole.as_view(), name="admin-assign-role"),
     path("photos/search", PhotoSearch.as_view(), name="photo-search"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
+    path("admin/people", AdminPeople.as_view(), name="admin-people"),
 ]
