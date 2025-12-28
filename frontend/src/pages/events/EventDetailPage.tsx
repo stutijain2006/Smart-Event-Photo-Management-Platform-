@@ -6,6 +6,7 @@ import { useAppSelector } from "../../app/hooks";
 import ShowTag from "../../components/tags/TagPeople";
 import Modal from "../../components/common/Modal";
 import axios from "axios";
+import DragDropUpload from "../../components/uploads/DragDropUpload";
 
 export default function EventDetailPage() {
     const { eventId } = useParams<{ eventId: string }>();
@@ -19,43 +20,13 @@ export default function EventDetailPage() {
     const [albums, setAlbums] = useState<any[]>([]);    
     const [photos, setPhotos] = useState<any[]>([]);
     const [showTag, setShowTag] = useState(false);
-    const [file, setFile] = useState<any>(null);
     const [files, setFiles] = useState<any[]>([]);
     const navigate = useNavigate();
 
-    const handleFileChange = (e : any) => {
-        setFile(e.target.files[0]);
-    };
 
     const handleMultipleFileChange = (e:React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
         setFiles(Array.from(e.target.files));
-    };
-
-    const handleUpload = async() => {
-        if (!file){
-            alert("Please select a file");
-            return;
-        }
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("event_id", eventId);
-
-        try{
-            const res = await axios.post("/photos/upload", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
-            });
-            console.log("Upload successful: ", res.data);
-            alert("Image uploaded successfully");
-
-            const photosRes = await api.get(`/photos/?event_id=${eventId}`);
-            setPhotos(photosRes.data);
-        }catch(error){
-            console.error("Error uploading image: ", error);
-            alert("Error uploading image");
-        }
     };
 
     const handleBulkUpload = async() => {
@@ -70,7 +41,7 @@ export default function EventDetailPage() {
         formData.append("event_id", eventId);
 
         try{
-            await api.post("/photos/bulk-upload", formData, {
+            await api.post("/photos/upload", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
@@ -114,21 +85,19 @@ export default function EventDetailPage() {
                 )}
             </div>
             { canManage && (
-                <div className="flex justify-center items-center gap-6">
-                    <div className="my-4">
-                        <input type="file" onChange={handleFileChange} />
-                        <button className="bg-gray-300 px-4 py-2 w-[60vw] h-[30vh] rounded-lg" onClick={handleUpload}>
-                            + Add Photo
-                        </button>
-                    </div>
-                    <div className="my-4">
-                        <input type="file" multiple onChange={handleMultipleFileChange} />
-                        <button className="bg-gray-300 px-4 py-2 w-[60vw] h-[30vh] rounded-lg" onClick={handleBulkUpload}>
-                            Upload Selected Photos
-                        </button>
-                    </div>
+                <div className="my-4 px-4 w-full">
+                    <DragDropUpload onFilesSelected={setFiles} />
+                    {files.length > 0 && (
+                        <div className="mt-4 flex items-center gap-4">
+                            <div className="text-[0.8rem] text-gray-600">
+                                {files.length} file(s) selected
+                            </div>
+                            <button className="bg-gray-300 px-4 py-2 w-[60vw] h-[30vh] rounded-lg" onClick={handleBulkUpload}>
+                                Upload Photos
+                            </button>
+                        </div>  
+                    )}
                 </div>
-                
             )}
             <div className="flex flex-col items-start justify-center gap-6">
                 <div className="text-[1.1rem] font-semibold mb-2">Albums</div>

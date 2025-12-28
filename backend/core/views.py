@@ -401,23 +401,29 @@ class PhotoUpload(APIView):
     permission_classes = [permissions.IsAuthenticated, IsPhotographerOrAdmin]
 
     def post(self, request):
-        uploaded_file = request.FILES.get('file')
-        if not uploaded_file:
+        uploaded_files = request.FILES.getlist('files') or request.FILES.getlist('file')
+        if not uploaded_files:
             return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
         event_id = request.data.get("event_id")
         album_id = request.data.get("album_id")
         taken_at = request.data.get("taken_at")
 
-        filename = uploaded_file.name
-        save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
-        saved_path = default_storage.save(save_path, uploaded_file)
+        event = Events.object.filter(event_id = event_id).first() if event_id else None
+        album = Album.object.filter(album_id = album_id).first() if album_id else None
+
+        created_files = []
+        for f in uploaded_files:
+            filename = uploaded_files.name
+            save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
+            saved_path = default_storage.save(save_path, f)
+       
         try:
             file_url = default_storage.url(saved_path)
         except FileNotFoundError:
             file_url = None
 
-        photo = photo.objects.create(
+        photo = Photo.objects.create(
             event_id = Events.objects.get(event_id = event_id) if event_id else None,
             album_id = Album.objects.get(album_id = album_id) if album_id else None,
             uploaded_by = request.user,
@@ -435,38 +441,6 @@ class PhotoUpload(APIView):
         serializer = PhotoSerializer(photo)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class MultiplePhotoUpload(APIView):
-    permission_classes = [permissions.IsAuthenticated, IsPhotographerOrAdmin]
-
-    def post(self, request):
-        files = request.FILES.getlist('files') or request.FILES.getlist('file')
-        if not files:
-            return Response({"message": "No files uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-        photos = []
-        for f in files:
-            filename = f.name
-            save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
-            saved_path = default_storage.save(save_path, f)
-            try: 
-                file_url = default_storage.url(saved_path)
-            except FileNotFoundError:
-                file_url = None
-            photo = photo.objects.create(
-                uploaded_by = request.user,
-                file_path_original = file_url,
-                file_path_thumbnail = None,
-                file_path_watermarked = None,
-                status = "processing"
-            )
-            photos.append(photo.photo_id)
-
-            try:
-                extract_and_save_metadata(photo)
-            except Exception as e:
-                pass
-
-        return Response({"photos": photos}, status=status.HTTP_201_CREATED)
-    
 def get_exif(img: Image.Image) -> dict:
     raw_exif = {}
     try:
