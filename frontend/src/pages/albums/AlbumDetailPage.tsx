@@ -6,6 +6,8 @@ import PhotoCard from "../../components/photos/PhotoCard";
 import { useAppSelector } from "../../app/hooks";
 import ShowTag from "../../components/tags/TagPeople";
 import Modal from "../../components/common/Modal";
+import DragDropUpload from "../../components/uploads/DragDropUpload";
+import { upload } from "@testing-library/user-event/dist/upload";
 
 export default function AlbumDetailPage() {
     const { albumId } = useParams<{ albumId: string }>();
@@ -13,7 +15,7 @@ export default function AlbumDetailPage() {
     const [photos, setPhotos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [showTag, setShowTag] = useState(false);
-
+    const [uploading, setUploading] = useState(false);
 
     const user = useAppSelector((state) => state.auth.user);
     const roles = user?.roles || [];
@@ -27,12 +29,42 @@ export default function AlbumDetailPage() {
         )
     }
 
+    const fetchPhotos = async() => {
+        const response = await api.get(`/albums/${albumId}/photos`);
+        setPhotos(response.data);
+    };
+
     useEffect(() => {
-        api.get(`/photos/?album_id=${albumId}`).then(res => setPhotos(res.data)).catch(console.error);
-    }, [albumId]);
+        fetchPhotos();
+    }, []);
+
+    const handleFilesSelected = async(files : File[]) => {
+        if (!canManage) return;
+        setUploading(true);
+        const formData = new FormData();
+
+        files.forEach((file: any) => {
+            formData.append("files", file);
+        });
+
+        formData.append("album_id", albumId);
+
+        try{
+            await api.post("/photos/upload", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+            await fetchPhotos();
+        } catch(err) {
+            console.error(err);
+            alert("Error uploading images");
+        } finally {
+            setUploading(false);
+        }
+    }
 
     const filteredPhotos = photos.filter((photo: any) => photo.photo_id.toLowerCase().includes(search.toLowerCase()));
-
 
     return (
         <DashboardLayout>
@@ -43,8 +75,11 @@ export default function AlbumDetailPage() {
                 </div>
 
                 {canManage && (
-                    <div className="flex flex-col justify-center items-center">
-                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[40vw] h-[40vh] rounded-lg"> + Upload Photos</button>
+                    <div className="flex flex-col justify-center items-center w-[60vw]">
+                        <DragDropUpload onFilesSelected={handleFilesSelected} />
+                        {uploading && (
+                            <div className="flex gap-4 bg-gray-300 px-4 py-2 w-[40vw] h-[40vh] rounded-lg">Uploading...</div>
+                        )}
                         <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] h-[40vh] rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
                     </div>
                 )}
