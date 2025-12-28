@@ -604,3 +604,34 @@ class AdminPeople(APIView):
         serializer = AdminPeopleSerializer(people, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class PhotoBatchDelete(APIView):
+    permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+
+    def post(self, request):
+        ids = request.data.get("photo_ids", [])
+        Photo.objects.filter(photo_id__in = ids).delete()
+        return Response({"message": "Photos deleted successfully"}, status=status.HTTP_200_OK)
+    
+class AlbumBatchDelete(APIView):
+    permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+
+    def post(self, request):
+        ids = request.data.get("album_ids", [])
+        Album.objects.filter(album_id__in = ids).delete()
+        return Response({"message": "Albums deleted successfully"}, status=status.HTTP_200_OK)
+    
+class EventBatchDelete(APIView):
+    permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+
+    def post(self, request):
+        ids = request.data.get("event_ids", [])
+        Events.objects.filter(event_id__in = ids).delete()
+        return Response({"message": "Events deleted successfully"}, status=status.HTTP_200_OK)
+    
+class PeopleBatchDeactivate(APIView):
+    permission_classes= [permissions.IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ids = request.data.get("person_ids", [])
+        Person.objects.filter(person_id__in = ids).update(is_active = False)
+        return Response({"message": "People deactivated successfully"}, status=status.HTTP_200_OK)

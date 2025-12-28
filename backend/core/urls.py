@@ -25,7 +25,11 @@ from .views import (
     AdminAssignRole,
     PhotoSearch,
     MeView,
-    AdminPeople
+    AdminPeople,
+    PhotoBatchDelete,
+    AlbumBatchDelete,
+    EventBatchDelete,
+    PeopleBatchDeactivate
 )
 
 urlpatterns =[
@@ -55,4 +59,8 @@ urlpatterns =[
     path("photos/search", PhotoSearch.as_view(), name="photo-search"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
     path("admin/people", AdminPeople.as_view(), name="admin-people"),
+    path("photos/batch-delete", PhotoBatchDelete.as_view(), name="photo-batch-delete"),
+    path("albums/batch-delete", AlbumBatchDelete.as_view(), name="album-batch-delete"),
+    path("events/batch-delete", EventBatchDelete.as_view(), name="event-batch-delete"),
+    path("people/batch-deactivate", PeopleBatchDeactivate.as_view(), name="people-batch-deactivate"),
 ]
