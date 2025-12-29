@@ -1,18 +1,29 @@
+import React from "react";
 type Props = {
     id : string;
     onClick : () => void;
-    selected : boolean;
+    disabled? : boolean;
     children : React.ReactNode;
 };
 import { useBatch } from "./BatchProvider";
 
-export default function SelectableCard({id, onClick, children} : Props){
-    const {selectionMode, selected, toggle} = useBatch();
+export default function SelectableCard({id, onClick, children, disabled = false} : Props){
+    const {selectionMode, selectedIds, toggle} = useBatch();
+    const isSelected = selectedIds.includes(id);
+
+    const handleClick = () => {
+        if (selectionMode && !disabled) toggle(id);
+        else onClick();
+    };
+    const handleCheckBoxClick = (e:React.MouseEvent) => {
+        e.stopPropagation();
+        if (!disabled)  toggle(id);
+    }
 
     return (
-        <div onClick={() => selectionMode ? toggle(id) : onClick()} className="relative cursor-pointer">
+        <div onClick={handleClick} className={`relative cursor-pointer ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
             {selectionMode && (
-                <input type = "checkbox" onChange= {() => toggle(id)} className="absolute top-2 left-2 z-10" />
+                <input type = "checkbox" checked={isSelected} onClick={handleCheckBoxClick} className="absolute top-2 left-2 z-10" />
             )}
             {children}
         </div>

@@ -63,7 +63,6 @@ function EventsContent({ events, canManage, onNavigate} : any) {
             <div className='grid grid-cols-2 gap-4'>
                 {events.map((event: any) => (
                     <SelectableCard 
-                        selected={selectionMode}
                         key={event.event_id}
                         id={event.event_id}
                         onClick={() => onNavigate(`/events/${event.event_id}`)}

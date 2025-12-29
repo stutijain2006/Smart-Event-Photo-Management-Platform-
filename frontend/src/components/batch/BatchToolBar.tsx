@@ -5,8 +5,8 @@ type Props = {
 };
 
 export default function BatchToolbar({ type, canManage } : Props){
-    const { selected, clear } = useBatch();
-    if (selected.length ===0 ) return null;
+    const { selectedIds, clear } = useBatch();
+    if (selectedIds.length ===0 ) return null;
 
     const handleDelete = async() => {
         await fetch(`/api/${type}s/batch-delete`, {
@@ -14,7 +14,7 @@ export default function BatchToolbar({ type, canManage } : Props){
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ids: selected})
+            body: JSON.stringify({ids: selectedIds})
         });
         clear();
     };
