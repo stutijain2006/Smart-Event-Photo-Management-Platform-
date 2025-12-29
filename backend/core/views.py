@@ -222,9 +222,9 @@ class EventListCreateView(generics.ListCreateAPIView):
     queryset = Events.objects.all().order_by("-start_time")
     serializer_class = EventSerializer
 
-    def get_permissions(self, request, view, obj=None):
+    def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return permissions.AllowAny()
+            return [permissions.AllowAny()]
         return[permissions.IsAuthenticated(), IsEventManagerOrAdmin()]
     
     def perform_create(self, serializer):
