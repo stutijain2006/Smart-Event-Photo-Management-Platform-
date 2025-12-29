@@ -1,11 +1,11 @@
 import React from "react";
+import { useBatch } from "./BatchProvider";
 type Props = {
     id : string;
     onClick : () => void;
     disabled? : boolean;
     children : React.ReactNode;
 };
-import { useBatch } from "./BatchProvider";
 
 export default function SelectableCard({id, onClick, children, disabled = false} : Props){
     const {selectionMode, selectedIds, toggle} = useBatch();

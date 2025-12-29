@@ -13,8 +13,8 @@ import SelectableCard from "../../components/batch/SelectableCard";
 
 export default function EventDetailPage() {
     const { eventId } = useParams<{ eventId: string }>();
-    if (!eventId) return null;
     const { user } = useAppSelector((state: any) => state.auth);
+    if (!eventId) return null;
     const roles = user?.roles || [];
 
     const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");

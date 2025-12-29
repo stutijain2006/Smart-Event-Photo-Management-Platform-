@@ -7,15 +7,13 @@ import { useAppSelector } from "../../app/hooks";
 import ShowTag from "../../components/tags/TagPeople";
 import Modal from "../../components/common/Modal";
 import DragDropUpload from "../../components/uploads/DragDropUpload";
-import { upload } from "@testing-library/user-event/dist/upload";
+
+import BatchProvider, { useBatch } from "../../components/batch/BatchProvider";
+import BatchToolbar from "../../components/batch/BatchToolbar";
+import SelectableCard from "../../components/batch/SelectableCard";
 
 export default function AlbumDetailPage() {
     const { albumId } = useParams<{ albumId: string }>();
-    const navigate = useNavigate();
-    const [photos, setPhotos] = useState<any[]>([]);
-    const [search, setSearch] = useState("");
-    const [showTag, setShowTag] = useState(false);
-    const [uploading, setUploading] = useState(false);
 
     const user = useAppSelector((state) => state.auth.user);
     const roles = user?.roles || [];
@@ -29,6 +27,21 @@ export default function AlbumDetailPage() {
         )
     }
 
+    return (
+        <BatchProvider>
+            <AlbumContent albumId={albumId} canManage={canManage} />
+        </BatchProvider>
+    );
+}
+
+function AlbumContent({ albumId, canManage} : {albumId : string, canManage: boolean}) {
+
+    const navigate = useNavigate();
+    const {selectionMode, setSelectionMode} = useBatch();
+    const [photos, setPhotos] = useState<any[]>([]);
+    const [search, setSearch] = useState("");
+    const [showTag, setShowTag] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const fetchPhotos = async() => {
         const response = await api.get(`/albums/${albumId}/photos`);
         setPhotos(response.data);
@@ -68,19 +81,34 @@ export default function AlbumDetailPage() {
 
     return (
         <DashboardLayout>
+            {selectionMode && (
+                <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
+                    await api.post(`/albums/${albumId}/photos/remove`, {photo_ids: ids});
+                await fetchPhotos();
+                },
+                }} />
+            )}
             <div className="p-6 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-4 mb-6">
                     <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
                     <div className="text-[1.3rem] font-bold ">Album </div>
                 </div>
 
-                {canManage && (
+                <div className="flex justify-center items-center gap-6">
+                    <button onClick={() => setSelectionMode(!selectionMode)} className="px-4 py-2 rounded-lg bg-gray-300">
+                        {selectionMode? "Cancel" : "Select"}
+                    </button>
+                    {canManage && (
+                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] h-[40vh] rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
+                    )}
+                </div>
+
+                {canManage && !selectionMode && (
                     <div className="flex flex-col justify-center items-center w-[60vw]">
                         <DragDropUpload onFilesSelected={handleFilesSelected} />
                         {uploading && (
                             <div className="flex gap-4 bg-gray-300 px-4 py-2 w-[40vw] h-[40vh] rounded-lg">Uploading...</div>
                         )}
-                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] h-[40vh] rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
                     </div>
                 )}
 
@@ -93,7 +121,11 @@ export default function AlbumDetailPage() {
                 ): (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {filteredPhotos.map((photo: any) => (
-                        <PhotoCard key={photo.photo_id} photo={photo} />    
+                        <SelectableCard key={photo.photo_id} id={photo.photo_id} onClick={() => {
+                            if (!selectionMode) navigate(`/photos/${photo.photo_id}`);
+                        }} > 
+                            <img src={photo.file_path_thumbnail || photo.file_path_original} alt="photo" className="w-[10vw] h-[10vh] object-cover" />
+                        </SelectableCard>    
                     ))}
                     </div>
                 )}
