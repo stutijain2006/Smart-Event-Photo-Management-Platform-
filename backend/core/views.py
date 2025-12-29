@@ -12,7 +12,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status,generics,  permissions
 from django.db import transaction
-from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, PhotoMetaData
+from django.shortcuts import redirect
+from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, PhotoMetaData, OAuthState
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -125,9 +126,10 @@ class OmniportLoginURLView(APIView):
     permission_classes = [permissions.AllowAny]
     def get(self, request):
         state = uuid.uuid4().hex
-        request.session['state'] = state
+        request.session['omniport_oauth_state'] = state
+        request.session.modified = True
         authorize_url = get_omniport_authorize_url(state)
-        return Response({'authorize_url': authorize_url}, status=status.HTTP_200_OK)
+        return redirect(authorize_url)
     
 class OmniportCallBackView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -137,10 +139,10 @@ class OmniportCallBackView(APIView):
 
         if not code or not state:
             return Response({'error': 'Missing code or state'}, status=status.HTTP_400_BAD_REQUEST)
-        expected_state = request.session.get('state')
+        expected_state = request.session.get('omniport_oauth_state')
         if not expected_state or expected_state != state:
             return Response({'error': 'Invalid state'}, status=status.HTTP_400_BAD_REQUEST)
-
+        del request.session['omniport_oauth_state']
         try:
             token_data = omniport_exchange_code_for_tokens(code)
         except Exception as e:
@@ -157,24 +159,44 @@ class OmniportCallBackView(APIView):
             return Response({"error": "Failed to get user data"}, status=status.HTTP_400_BAD_REQUEST)
         
         omniport_user_id = str(user_data.get('userId') or user_data.get("username"))
-        person = user_data.get("person" or {}) or {}
-        contact_info = user_data.get("contactInformation" or {}) or {}
-        full_name = person.get("name" or {}) or {}
-        email_id = contact_info.get("email" or {}) or {}
+        username = user_data.get("username")
+        person = user_data.get("person") or {}
+        student= user_data.get("student") or {}
+        contact_info = user_data.get("contactInformation") or {}
+        full_name = person.get("fullName") or {}
+        profile_photo = person.get("displayPicture") or {}
+        roles = [
+            r.get("role")
+            for r in person.get("roles", [])
+            if r.get("activeStatus") == "ActiveStatus.IS_ACTIVE"
+        ]
+        department = (
+            student.get("branch", {}).get("department", {}).get("name")
+        )
+        current_year = student.get("currentYear")
+        email= contact_info.get("instituteWebmailAddress")
+        email_verified = contact_info.get("emailAddressVerified", False)
 
-        if not omniport_user_id or not email_id:
+        if not omniport_user_id or not email:
             return Response({"error": "Missing omniport_user_id or email_id"}, status=status.HTTP_400_BAD_REQUEST)
         
         user, created = Person.objects.get_or_create(omniport_user_id=omniport_user_id)
-        user.email_id = email_id
+        user.username = username
+        user.email_id = email
+        user.is_email_verified = email_verified
+        user.department = department
+        user.current_year = current_year
+        user.profile_picture = profile_photo
         user.person_name = full_name
+        user.roles = roles
         user.is_active = True
-        user.is_email_verified = True
         user.save()
         
-        omniport_account, acc_created = OmniportAccount.objects.get_or_create(person_id=user, omniport_user_id=omniport_user_id)
-        omniport_account.access_token = access_token
-        omniport_account.refresh_token = refresh_token
+        omniport_account, acc_created = OmniportAccount.objects.get_or_create( omniport_user_id=omniport_user_id, defaults={
+            "person_id" : user,
+            "access_token" : access_token,
+            "refresh_token" : refresh_token
+        })
         omniport_account.save()
 
         if not acc_created:
@@ -186,6 +208,7 @@ class OmniportCallBackView(APIView):
 
         login(request, user)
         return Response({"message": "User logged in successfully"}, status=status.HTTP_200_OK)
+    
     
 class EventListCreateView(generics.ListCreateAPIView):
     queryset = Events.objects.all().order_by("-start_time")

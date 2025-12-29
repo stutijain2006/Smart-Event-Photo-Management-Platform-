@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    "sslserver",
+    "django_extensions"
 ]
 
 
@@ -54,7 +56,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 AUTH_USER_MODEL = "core.Person"
 OMNIPORT_BASE_URL = os.getenv("OMNIPORT_BASE_URL")
-OMNIPORT_CLIENT_ID = os.getenv("OMNIPORT_CLIENT_ID")
+OMNIPORT_CLIENT_ID = os.getenv("OMNIPORT_CLIENT_ID")    
 OMNIPORT_CLIENT_SECRET = os.getenv("OMNIPORT_CLIENT_SECRET")
 OMNIPORT_REDIRECT_URI = os.getenv("OMNIPORT_REDIRECT_URI")
 
@@ -153,7 +155,11 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_NAME = "sessionid"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = "Lax"
 
 # Static files (CSS, JavaScript, Images)

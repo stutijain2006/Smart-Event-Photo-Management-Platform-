@@ -6,25 +6,14 @@ import { fetchMe } from "../../features/auth/authslice";
 
 export default function OmniportCallBack() {
     const dispatch = useAppDispatch();
-    const location = useLocation();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
 
     useEffect(() => {
-        const code = searchParams.get("code");
-        const state = searchParams.get("state");
-        if (!code || !state) {
+        dispatch(fetchMe()).then(() => {
+            navigate("/");
+        }).catch(() => {
             navigate("/login");
-            return;
-        }
-        if (code && state) {
-            api.get(`/auth/omniport-callback?code=${code}&state=${state}`).then(async() => {
-                await dispatch(fetchMe());
-                navigate("/dashboard");
-                }).catch(() => {
-                    navigate("/login");
-            });
-        }
+        })
     }, []);
 
     return(

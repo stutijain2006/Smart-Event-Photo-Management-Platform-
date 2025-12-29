@@ -4,8 +4,7 @@ import React from 'react';
 export default function OmniportButton() {
     const handleOmniportLogin = async () => {
         try {
-            const response = await api.get('/auth/omniport-login-url');
-            window.location.href = response.data.authorize_url;
+            window.location.href = "http://localhost:8000/api/auth/omniport-login-url";
         } catch (error) {
             console.error('Error fetching Omniport login URL:', error);
         }
