@@ -6,7 +6,9 @@ import AppLogo from '../../assets/logo.png';
 export default function TopBar() {
     const navigate = useNavigate();
     const { user }= useAppSelector((state) => state.auth);
-    const roles = user?.roles || [];
+    const isAdmin = user?.roles?.some(
+        (r:any) => r.role_name === 'ADMIN'
+    )
 
     return (
         <div className="flex items-center justify-between p-4 bg-[#f5f5f5] shadow-md">
@@ -15,7 +17,7 @@ export default function TopBar() {
             <div className='flex items-center justify-center gap-6'>
                 <div className='text-[1rem] font-semibold' onClick={() => navigate("/events")}>Events</div>
                 <div className='text-[1rem] font-semibold' onClick={() => navigate("/albums")}>My Albums</div>
-                {roles.includes('ADMIN') && (
+                {isAdmin && (
                     <div className='text-[1rem] font-semibold' onClick= {() => navigate("/admin/people")} >People</div>
                 )}
                 <div className='text-[1rem] font-semibold'>

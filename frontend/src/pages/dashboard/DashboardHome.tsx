@@ -3,6 +3,9 @@ import { useAppSelector } from "../../app/hooks";
 
 export default function DashboardHome() {
     const { user } = useAppSelector((state: any) => state.auth);
+    const isAdmin = user?.roles?.some(
+        (r: any) => r.role_name === "ADMIN"
+    );
 
     return(
         <DashboardLayout>
@@ -12,7 +15,7 @@ export default function DashboardHome() {
                     <DashboardCard title="Events" />
                     <DashboardCard title="Albums" />
                     <DashboardCard title="Photos" />
-                    {user?.roles?.includes("ADMIN") && (
+                    {isAdmin && (
                         <DashboardCard title= "Admin Panel" />
                     )}
                 </div>
