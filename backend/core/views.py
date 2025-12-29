@@ -288,7 +288,7 @@ class PhotoCommentListCreateView(generics.ListCreateAPIView):
         photo_id = self.kwargs('photo_id')
         serializer.save(photo_id=photo_id, user_id=self.request.user)
 
-class PhotoLike(APIView):
+class PhotoLikeView(APIView):
     permission_classes = [permissions.IsAuthenticated | IsNotUser]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)
@@ -551,7 +551,7 @@ class MyFavourite(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self,request):
-        likes = PhotoLike.objects.filter(user_id = request.user_id).select_related("photo_id").order_by("-created_at")
+        likes = PhotoLike.objects.filter(user_id = request.user).select_related("photo_id").order_by("-created_at")
         photos = [like.photo_id for like in likes]
         serializer = PhotoSerializer(photos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -559,15 +559,11 @@ class MyFavourite(APIView):
 class MyTaggedView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
-        tags = PersonTag.objects.filter(user_id = request.user_id)
+        tags = PersonTag.objects.filter(user_id = request.user)
         result = []
         for tag in tags:
             if tag.photo_id:
                 result.append(tag.photo_id.photo_id)
-            elif tag.album_id:
-                result.append(tag.album_id.album_id)
-            elif tag.event_id:
-                result.append(tag.event_id.event_id)
         serializer = PhotoSerializer(result, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
