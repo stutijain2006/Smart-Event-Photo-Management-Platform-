@@ -1,27 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { getCSRFToken } from '../../utils/csrf';
 
 export default function ProfileEditComponent({ user }: { user: any }) {
-    const [name, setName] = useState(user.name);
-    const [shortBio, setShortBio] = useState(user.short_bio);
-    const [batch, setBatch] = useState(user.batch);
-    const [department, setDepartment] = useState(user.department);
-    const [profilePicture, setProfilePicture] = useState(user.profilePicture);
+    const [name, setName] = useState("");
+    const [shortBio, setShortBio] = useState("");
+    const [batch, setBatch] = useState("");
+    const [department, setDepartment] = useState("");
+    const [profilePicture, setProfilePicture] = useState("");
 
+    useEffect(() => {
+        if (user){
+            setName(user.person_name || "");
+            setShortBio(user.short_bio || "");
+            setBatch(user.batch || "");
+            setDepartment(user.department || "");
+            setProfilePicture(user.profile_picture || "");
+        }
+    }, [user]);
+    
     const handleProfileUpdate = async () => {
         try {
-            await api.put('/auth/me', {
-                name,
-                short_bio: shortBio,
+            const payload = {
+                person_name : name,
+                short_bio : shortBio,
                 batch,
                 department,
-                profilePicture
+                profile_picture: profilePicture
+            }
+            await api.put('/auth/me/', payload, {
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                },
             });
             alert('Profile updated successfully!');
         } catch (error) {
             console.error('Error updating profile:', error);
+            alert('Error updating profile. Please try again.');
         }
     };
+
 
     return (
         <div className="flex flex-col gap-4 p-4">

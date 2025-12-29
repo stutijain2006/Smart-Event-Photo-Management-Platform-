@@ -13,6 +13,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status,generics,  permissions
 from django.db import transaction
 from django.shortcuts import redirect
+from django.contrib.auth import authenticate
+from rest_framework.authentication import SessionAuthentication
 from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, PhotoMetaData, OAuthState
 from .serializers import (
     RegisterSerializer,
@@ -43,6 +45,10 @@ from .utils import (
     omniport_user_data,
     omniport_revoke_token
 )
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -107,12 +113,14 @@ class VerifyEmail(APIView):
         return Response({'message': 'Email verified successfully'}, status=status.HTTP_200_OK)
     
 class LoginView(APIView):
-    permissions_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [CsrfExemptSessionAuthentication]
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.validated_data['user']
+        user.backend = "django.contrib.auth.backends.ModelBackend"
         login(request, user)
         return Response({"message": "User logged in successfully"}, status=status.HTTP_200_OK)
     
@@ -613,12 +621,32 @@ class PhotoSearch(generics.ListAPIView):
         return qs
 
 class MeView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request):
         user = request.user
-        roles = UserRole.objects.filter(user_id = user.user_id).select_related("role_id").select_related("event_id")
-        return Response({"user_id": str(user.user_id), "email_id" : user.email_id, "person_name": user.person_name, "roles": list(roles), "is_email_verified": user.is_email_verified  })
+        print("AUTH:", request.user, request.user.is_authenticated)
+        roles = UserRole.objects.filter(user_id = user).select_related("role_id", "event_id")
+        roles_data = [
+            {
+                "id": str(r.id),
+                "role_name": r.role_id.name,
+                "event_name": r.event_id.event_name if r.event_id else None
+            }
+            for r in roles
+        ]
+        return Response({"user_id": str(user.user_id), "email_id" : user.email_id, "person_name": user.person_name, "roles": roles_data, "is_email_verified": user.is_email_verified  })
+    
+    def put(self, request):
+        user = request.user
+        user.person_name = request.data.get("person_name", user.person_name)
+        user.batch = request.data.get("batch", user.batch)
+        user.department = request.data.get("department", user.department)
+        user.short_bio = request.data.get("short_bio", user.short_bio)
+        user.profile_picture = request.data.get("profile_picture", user.profile_picture)
+        user.save()
+        return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
+
 
 class AdminPeople(APIView):
     permission_classes= [permissions.IsAuthenticated, IsAdmin] 
