@@ -12,7 +12,7 @@ class Person (AbstractUser):
     username = None
     email_id = models.EmailField(unique=True)
     person_name = models.CharField(max_length=100)
-    profile_picture = models.ImageField(upload_to = "profiles/", null=True, blank=True)
+    profile_picture = models.URLField(null=True, blank=True)
     short_bio = models.TextField(max_length=300, blank=True)
     batch = models.CharField(max_length=10, blank=True)
     department = models.CharField(max_length=50, blank=True)

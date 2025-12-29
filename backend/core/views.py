@@ -635,7 +635,16 @@ class MeView(APIView):
             }
             for r in roles
         ]
-        return Response({"user_id": str(user.user_id), "email_id" : user.email_id, "person_name": user.person_name, "roles": roles_data, "is_email_verified": user.is_email_verified  })
+        return Response({"user_id": str(user.user_id),
+                        "email_id" : user.email_id,
+                        "person_name": user.person_name,
+                        "roles": roles_data,
+                        "short_bio" : user.short_bio,
+                        "batch": user.batch,
+                        "department": user.department,
+                        "profile_picture": user.profile_picture,
+                        "is_email_verified": user.is_email_verified
+                        })
     
     def put(self, request):
         user = request.user

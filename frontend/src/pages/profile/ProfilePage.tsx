@@ -19,7 +19,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchData = async() => {
-            const res = await api.get("/auth/me");
+            const res = await api.get("/auth/me/");
             setUser(res.data);
             setUserRoles(res.data.roles || []);
         }
@@ -43,10 +43,10 @@ export default function ProfilePage() {
                     <div className='text-[1.3rem] font-bold'>Profile</div>
                 </div>
                 <div className='w-[80vw] flex items-start justify-center px-4 my-8'>
-                    <div className='w-[30vw] h-[40vh] object-contain'><img src={user.profilePicture} alt="Profile Picture" /></div>
+                    <div className='w-[30vw] h-[40vh] object-contain'><img src={user.profilePicture || "https://via.placeholder.com/150"} alt="Profile Picture" /></div>
                     <div className='flex flex-col items-start justify-center gap-4'>
-                        <div className='text-[1.2rem] font-semibold'>{user.name}</div>
-                        <div className='text-[1.05rem] font-semibold'>{user.email}</div>
+                        <div className='text-[1.2rem] font-semibold'>{user.person_name}</div>
+                        <div className='text-[1.05rem] font-semibold'>{user.email_id}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.short_bio}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.batch}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.department}</div>
