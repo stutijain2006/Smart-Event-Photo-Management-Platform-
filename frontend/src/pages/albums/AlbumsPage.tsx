@@ -9,7 +9,15 @@ export default function AlbumPage(){
     const [myAlbums, setMyAlbums] = useState<any[]>([]);
     const navigate = useNavigate();
     const [favourite, setFavourite] = useState<any[]>([]);
-    const [tagged, setTagged] = useState<any[]>([]);
+    const [tagged, setTagged] = useState<{
+        photos: any[],
+        albums: any[],
+        events: any[]
+    }>({
+        photos: [],
+        albums: [],
+        events: []
+    });
     const [search, setSearch] = useState("");
 
     const { user } = useAppSelector((state) => state.auth);
@@ -50,12 +58,12 @@ export default function AlbumPage(){
                     <AlbumCard album={{
                         album_name: "Liked Photos",
                         isVirtual: true,
-                        route : "/albums/favourite"
+                        route : "/my/favourite"
                     }} />
                 </Section>
 
                 <Section title="Albums You're Tagged In">
-                    {tagged.map ((album: any) => <AlbumCard key={album.album_id} album={{
+                    {tagged.albums.map((album: any) => <AlbumCard key={album.album_id} album={{
                         album_name : album.album_name || "Tagged Album",
                         album_id : album.album_id
                     }} />)}
