@@ -560,12 +560,21 @@ class MyTaggedView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         tags = PersonTag.objects.filter(user_id = request.user)
-        result = []
+        photos = []
+        albums = []
+        events= []
         for tag in tags:
             if tag.photo_id:
-                result.append(tag.photo_id.photo_id)
-        serializer = PhotoSerializer(result, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+                photos.append(tag.photo_id.photo_id)
+            elif tag.album_id:
+                albums.append(tag.album_id.album_id)
+            elif tag.event_id:
+                events.append(tag.event_id.event_id)
+        return Response({
+            "photos": PhotoSerializer(photos, many=True).data,
+            "albums": AlbumSerializer(albums, many=True).data,
+            "events": EventSerializer(events, many=True).data
+        }, status=status.HTTP_200_OK)
     
 class MyAlbumView(APIView):
     permission_classes =  [permissions.IsAuthenticated]
