@@ -358,41 +358,40 @@ class AlbumPhotoManage(APIView):
 class CreatePersonTag(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
-        user_to_tag_id = request.data.get("user_id")
-        typ = request.data.get("type")
+        user_id = request.data.get("user_id")
+        tag_type = request.data.get("type")
         object_id = request.data.get("object_id")
 
-        if not (user_to_tag_id and typ and object_id):
+        if not (user_id and tag_type and object_id):
             return Response({"message": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
-        typ = typ.strip().lower()
+        tag_type = tag_type.strip().lower()
         
         from .permissions import user_has_role
         if not (user_has_role(request.user, "ADMIN") or user_has_role(request.user, "EVENT_MANAGER") or user_has_role(request.user, "PHOTOGRAPHER")):
             return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
         
-        target_user = get_object_or_404(Person, user_id=user_to_tag_id)
-
-        exists = PersonTag.objects.filter(user_id=target_user, 
-                                          photo_id = photo if typ == "photo" else None,
-                                          album_id = album if typ == "album" else None,
-                                          event_id = event if typ == "event" else None
-                                          ).exists()
-        if exists:
-            return Response({"message": "Person tag already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        target_user = get_object_or_404(Person, user_id=user_id)
+        tag_data = {
+            "user_id": target_user,
+            "tagged_by": request.user
+        }
         
-        if typ == "photo":
+        if tag_type == "photo":
             photo = Photo.objects.get(photo_id=object_id)
-            PersonTag.objects.create(user_id=target_user, photo_id=photo, album_id = None, event_id = None, tagged_by = request.user)
-        elif typ == "album":
+            tag_data["photo_id"] = photo
+        elif tag_type == "album":
             album = Album.objects.get(album_id=object_id)
-            PersonTag.objects.create(user_id=target_user, tagged_by = request.user, album_id=album, photo_id = None, event_id = None)
-        elif typ == "event":
+            tag_data["album_id"] = album
+        elif tag_type == "event":
             event = Events.objects.get(event_id=object_id)
-            PersonTag.objects.create(user_id=target_user, tagged_by = request.user, album_id = None, photo_id = None, event_id=event)
+            tag_data["event_id"] = event
         else:
             return Response({"message": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
         
+        PersonTag.objects.create(**tag_data)
+        
         return Response({"message": "Person tag created successfully"}, status=status.HTTP_200_OK)
+    
     
 class RoleChangeRequestCreate(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]

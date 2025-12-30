@@ -56,6 +56,6 @@ class IsNotUser(BasePermission):
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         return(
-            request.user and request.user.is_authenticated and request.user.roles.filter(role_name = ROLE_ADMIN).exists()
+            request.user and request.user.is_authenticated and user_has_role(request.user, ROLE_ADMIN)
         )   
     

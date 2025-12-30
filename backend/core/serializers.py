@@ -46,6 +46,7 @@ class EventSerializer(serializers.ModelSerializer):
         ]
 
 class AlbumSerializer(serializers.ModelSerializer):
+
     created_by = serializers.ReadOnlyField(source="created_by.person_name")
     class Meta:
         model = Album
