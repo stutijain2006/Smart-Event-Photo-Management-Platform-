@@ -5,11 +5,13 @@ import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import AlbumCard from "../../components/albums/AlbumCard";
 import { useAppSelector } from "../../app/hooks";
 import { canManagePhotos } from "../../utils/permission/permissions";
+import NewAlbum from "../../components/albums/NewAlbum";
 
 export default function AlbumPage(){
     const [myAlbums, setMyAlbums] = useState<any[]>([]);
     const navigate = useNavigate();
     const [favourite, setFavourite] = useState<any[]>([]);
+    const [createAlbum, setCreateAlbum] = useState(false);
     const [tagged, setTagged] = useState<{
         photos: any[],
         albums: any[],
@@ -46,7 +48,7 @@ export default function AlbumPage(){
                         <input type = "text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="border p-2 rounded-lg w-[40vw]"></input>
 
                         {canManage && (
-                            <button className="border p-2 rounded-lg w-[40vw]"> + Create Album </button>
+                            <button className="border p-2 rounded-lg w-[40vw]" onClick={() => setCreateAlbum(true)}> + Create Album </button>
                         )}
                     </div>
                 </div>
@@ -70,6 +72,13 @@ export default function AlbumPage(){
                     }} />)}
                 </Section>
             </div>
+            <NewAlbum 
+                isOpen={createAlbum}
+                onClose={() => setCreateAlbum(false)}
+                onCreated = {() => {
+                    api.get(`/albums/`).then(res => setMyAlbums(res.data));
+                }} 
+            />
         </DashboardLayout>
     );
 }
