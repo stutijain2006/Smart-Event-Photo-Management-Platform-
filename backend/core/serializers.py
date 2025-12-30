@@ -193,7 +193,7 @@ class RoleChangeRequestSerializer(serializers.ModelSerializer):
             "created_at"
         ]
 
-class AlbumAddPhotoSerializer(serializers.ModelSerializer):
+class AlbumAddPhotoSerializer(serializers.Serializer):
     photo_id = serializers.UUIDField()
 
 class AdminPeopleSerializer(serializers.ModelSerializer):

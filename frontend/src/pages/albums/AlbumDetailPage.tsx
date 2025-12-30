@@ -43,7 +43,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
     const [showTag, setShowTag] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fetchPhotos = async() => {
-        const response = await api.get(`/albums/${albumId}/photos`);
+        const response = await api.get(`/albums/${albumId}/photos/`);
         setPhotos(response.data);
     };
 
@@ -54,25 +54,26 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
     const handleFilesSelected = async(files : File[]) => {
         if (!canManage) return;
         setUploading(true);
-        const formData = new FormData();
-
-        files.forEach((file: any) => {
-            formData.append("files", file);
-        });
-
-        formData.append("album_id", albumId);
-
         try{
-            await api.post("/photos/upload", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
-            });
+            for (const file of files){
+                const formData = new FormData();
+                formData.append("files", file);
+
+                const uploadRes= await api.post("/photos/upload", formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                });
+
+                const uploadPhoto = uploadRes.data;
+
+                await api.post(`/albums/${albumId}/photos/`, {photo_id: uploadPhoto.photo_id});
+            }
             await fetchPhotos();
-        } catch(err) {
-            console.error(err);
-            alert("Error uploading images");
-        } finally {
+        }catch(error){
+            console.error("Error uploading images: ", error);
+            alert("Error uploading images");    
+        }finally{
             setUploading(false);
         }
     }
@@ -83,8 +84,10 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
         <DashboardLayout>
             {selectionMode && (
                 <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
-                    await api.post(`/albums/${albumId}/photos/remove`, {photo_ids: ids});
-                await fetchPhotos();
+                    for (const id of ids){
+                        await api.delete(`/albums/${albumId}/photos/`, {data: {photo_id: id}});
+                    }
+                    await fetchPhotos();
                 },
                 }} />
             )}

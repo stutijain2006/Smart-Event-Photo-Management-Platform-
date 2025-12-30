@@ -330,6 +330,7 @@ class DownloadPhoto(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)        
         
 class AlbumPhotoManage(APIView):
+    authentication_classes= [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, album_id):
@@ -449,11 +450,9 @@ class PhotoUpload(APIView):
             return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
         event_id = request.data.get("event_id")
-        album_id = request.data.get("album_id")
         taken_at = request.data.get("taken_at")
 
         event = Events.objects.filter(event_id = event_id).first() if event_id else None
-        album = Album.objects.filter(album_id = album_id).first() if album_id else None
 
         for f in uploaded_files:
             filename = uploaded_files[0].name
@@ -467,7 +466,6 @@ class PhotoUpload(APIView):
 
         photo = Photo.objects.create(
             event_id = event,
-            album_id = album,
             uploaded_by = request.user,
             file_path_original = file_url,
             file_path_thumbnail = None,
