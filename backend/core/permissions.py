@@ -13,7 +13,7 @@ def user_has_role(user, role_name : str , event = None) -> bool:
         return False
     if user.is_superuser:
         return True
-    qs = UserRole.objects.filter(userId = user, role_name = role_name)
+    qs = UserRole.objects.filter(user_id = user, role_id__name = role_name)
     if event:
         qs = qs.filter(event = event)
     return qs.exists()

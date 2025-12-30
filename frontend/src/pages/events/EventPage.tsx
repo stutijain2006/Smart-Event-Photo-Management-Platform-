@@ -7,14 +7,16 @@ import BatchProvider, { useBatch } from '../../components/batch/BatchProvider';
 import BatchToolbar from '../../components/batch/BatchToolbar';
 import SelectableCard from '../../components/batch/SelectableCard';
 import { canManageSpecificEvents} from '../../utils/permission/permissions';
+import NewEvent from '../../components/events/NewEvent';
 
 export default function EventsPage() {
     const [events, setEvents] = useState([]);
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
+    const [showCreateModal, setShowCreateModal] = useState(false);
     console.log("USER FROM API:", user);
     
-
+    
     const canManage = canManageSpecificEvents(user?.roles);
     console.log("CAN MANAGE:", canManage);
 
@@ -33,12 +35,21 @@ export default function EventsPage() {
                 events={events}
                 canManage={canManage}
                 onNavigate={navigate}
+                onCreateEvent={() => setShowCreateModal(true)}
             />
+            <NewEvent isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={() => {
+                api.get('/events/').then(res => setEvents(res.data));
+            }} />
         </BatchProvider>
     );
 }
 
-function EventsContent({ events, canManage, onNavigate} : any) {
+function EventsContent({ events, canManage, onNavigate, onCreateEvent} : {
+    events: any[];
+    canManage : boolean;
+    onNavigate: (path: string) => void;
+    onCreateEvent: () => void
+}) {
     const { selectionMode, setSelectionMode } = useBatch();
 
     return(
@@ -56,7 +67,7 @@ function EventsContent({ events, canManage, onNavigate} : any) {
                         {selectionMode ? "Cancel" : "Select"}
                     </button>
 
-                    <button onClick={() => onNavigate("/events/create")} className='px-4 py-2 bg-gray-300 rounded-lg '>
+                    <button onClick={onCreateEvent} className='px-4 py-2 bg-gray-300 rounded-lg '>
                         + New Event
                     </button>
                     </>

@@ -217,8 +217,9 @@ class OmniportCallBackView(APIView):
         login(request, user)
         return Response({"message": "User logged in successfully"}, status=status.HTTP_200_OK)
     
-    
+
 class EventListCreateView(generics.ListCreateAPIView):
+    authentication_classes= [CsrfExemptSessionAuthentication]
     queryset = Events.objects.all().order_by("-start_time")
     serializer_class = EventSerializer
 
