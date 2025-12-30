@@ -12,7 +12,7 @@ export default function TopBar() {
 
     return (
         <div className="flex items-center justify-between p-4 bg-[#f5f5f5] shadow-md">
-            <img src={AppLogo} alt="App Logo" className="w-[10vw] h-auto px-4" onClick={() => navigate(-1)} />
+            <img src={AppLogo} alt="App Logo" className="w-[10vw] h-auto px-4" onClick={() => navigate("/")} />
             <h1 className="text-[1.3rem] font-bold text-gray-950">Dashboard</h1>
             <div className='flex items-center justify-center gap-6'>
                 <div className='text-[1rem] font-semibold' onClick={() => navigate("/events")}>Events</div>

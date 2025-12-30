@@ -21,6 +21,7 @@ export default function AlbumPage(){
     const [search, setSearch] = useState("");
 
     const { user } = useAppSelector((state) => state.auth);
+    console.log("USER FROM API:", user);
     const roles = user?.roles || [];
     const canCreateAlbum = roles.includes("PHOTOGRAPHER") || roles.includes("ADMIN");
 

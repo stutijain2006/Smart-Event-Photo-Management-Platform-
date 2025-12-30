@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest
+from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +15,17 @@ class PersonSerializer(serializers.ModelSerializer):
             "batch",
             "department",
             "is_email_verified",
+            "roles"
+        ]
+    
+    def get_roles(self, obj):
+        roles = UserRole.objects.filter(user_id = obj).select_related('role_id')
+        return[
+            {
+                "role_name": ur.role_id.role_name,
+                "event_id": ur.event_id_id
+            }
+            for ur in roles
         ]
 
 class EventSerializer(serializers.ModelSerializer):

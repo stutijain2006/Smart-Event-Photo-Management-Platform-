@@ -25,6 +25,7 @@ export default function ProfilePage() {
         }
         fetchData();
     }, []);
+    console.log("USER FROM API:", user);
 
     if (!user) {
         return <div>Loading...</div>;

@@ -11,6 +11,7 @@ export default function EventsPage() {
     const [events, setEvents] = useState([]);
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
+    console.log("USER FROM API:", user);
 
     const roles = user?.roles || [];
     const canManage = roles.includes("PHOTOGRAPHER") || roles.includes("ADMIN");

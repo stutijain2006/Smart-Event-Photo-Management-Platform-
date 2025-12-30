@@ -634,9 +634,8 @@ class MeView(APIView):
         roles = UserRole.objects.filter(user_id = user).select_related("role_id", "event_id")
         roles_data = [
             {
-                "id": str(r.id),
-                "role_name": r.role_id.name,
-                "event_name": r.event_id.event_name if r.event_id else None
+                "role_name": r.role_id.role_name,
+                "event_name": str(r.event_id_id) if r.event_id else None
             }
             for r in roles
         ]
@@ -664,7 +663,7 @@ class MeView(APIView):
 
 class AdminPeople(APIView):
     permission_classes= [permissions.IsAuthenticated, IsAdmin] 
-    def get(self, request):
+    def get(self, request): 
         people = Person.objects.all().order_by("person_name")
         serializer = AdminPeopleSerializer(people, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
