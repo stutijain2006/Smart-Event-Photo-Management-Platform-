@@ -5,12 +5,12 @@ import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import { useAppSelector } from "../../app/hooks";
 import ShowTag from "../../components/tags/TagPeople";
 import Modal from "../../components/common/Modal";
-import axios from "axios";
 import DragDropUpload from "../../components/uploads/DragDropUpload";
 import BatchProvider, {useBatch} from "../../components/batch/BatchProvider";
 import BatchToolbar from "../../components/batch/BatchToolbar";
 import SelectableCard from "../../components/batch/SelectableCard";
 import { canManagePhotos } from "../../utils/permission/permissions";
+import NewAlbum from "../../components/albums/NewAlbum";
 
 export default function EventDetailPage() {
     const { eventId } = useParams<{ eventId: string }>();
@@ -30,15 +30,11 @@ function EventDetailPageContent({eventId, canManage}: any) {
     const [albums, setAlbums] = useState<any[]>([]);    
     const [photos, setPhotos] = useState<any[]>([]);
     const [showTag, setShowTag] = useState(false);
+    const [showAlbumModal, setShowAlbumModal] = useState(false);
     const [files, setFiles] = useState<any[]>([]);
     const { selectionMode, setSelectionMode } = useBatch();
     const navigate = useNavigate();
     const [activeSelection, setActiveSelection] = useState<"album" | "photo" | null>(null);
-
-    const handleMultipleFileChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files) return;
-        setFiles(Array.from(e.target.files));
-    };
 
     const handleBulkUpload = async() => {
         if (files.length === 0){
@@ -95,7 +91,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
                 </h2>
                 {canManage && (
                     <div className="flex gap-3">
-                        <button className="text-[1.2rem] font-semibold px-4 py-2 rounded-lg">+ Create Album</button>
+                        <button className="text-[1.2rem] font-semibold px-4 py-2 rounded-lg" onClick={() => setShowAlbumModal(true)}>+ Create Album</button>
                         <button className="text-[1.2rem] font-semibold px-4 py-2 rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
                     </div>
                 )}
@@ -166,6 +162,13 @@ function EventDetailPageContent({eventId, canManage}: any) {
                     ))}
                 </div>
             </div>
+            <NewAlbum 
+                isOpen={showAlbumModal}
+                eventId={eventId}
+                onClose={() => setShowAlbumModal(false)}
+                onCreated = {() => {
+                    api.get(`/albums/?event_id=${eventId}`).then(res => setAlbums(res.data));
+                }} />
             <Modal isOpen={showTag} onClose={() => setShowTag(false)}>
                 <ShowTag type="event" objectId={eventId} onClose={() => setShowTag(false)} />
             </Modal>

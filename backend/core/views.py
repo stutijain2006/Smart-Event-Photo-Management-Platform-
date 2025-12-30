@@ -232,12 +232,13 @@ class EventListCreateView(generics.ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 class AlbumListCreateView(generics.ListCreateAPIView):
+    authentication_classes= [CsrfExemptSessionAuthentication]
     queryset = Album.objects.all().order_by("-created_at")
     serializer_class = AlbumSerializer
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return permissions.AllowAny()
+            return [permissions.AllowAny()]
         return[permissions.IsAuthenticated(), IsPhotographerOrAdmin()]
     
     def get_queryset(self):
@@ -251,12 +252,13 @@ class AlbumListCreateView(generics.ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 class PhotoListCreateView(generics.ListCreateAPIView):
+    authentication_classes= [CsrfExemptSessionAuthentication]
     queryset = Photo.objects.all().order_by("-uploaded_at")
     serializer_class = PhotoSerializer
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return permissions.AllowAny()
+            return [permissions.AllowAny()]
         return[permissions.IsAuthenticated(), IsPhotographerOrAdmin()]
     
     def get_queryset(self):
@@ -278,7 +280,7 @@ class PhotoCommentListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
-            return permissions.AllowAny()
+            return [permissions.AllowAny()]
         return[permissions.IsAuthenticated(), IsNotUser()]
     
     def get_queryset(self):

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import api from "../../services/api";
 import Modal from "../common/Modal";
-import { start } from "repl";
 
 interface Props {
     isOpen: boolean;
