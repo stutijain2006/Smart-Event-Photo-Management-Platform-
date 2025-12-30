@@ -10,14 +10,13 @@ import DragDropUpload from "../../components/uploads/DragDropUpload";
 import BatchProvider, {useBatch} from "../../components/batch/BatchProvider";
 import BatchToolbar from "../../components/batch/BatchToolbar";
 import SelectableCard from "../../components/batch/SelectableCard";
+import { canManagePhotos } from "../../utils/permission/permissions";
 
 export default function EventDetailPage() {
     const { eventId } = useParams<{ eventId: string }>();
     const { user } = useAppSelector((state: any) => state.auth);
     if (!eventId) return null;
-    const roles = user?.roles || [];
-
-    const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");
+   const canManage = canManagePhotos(user?.roles);
 
     return(
         <BatchProvider>

@@ -1,0 +1,5 @@
+export const ROLE_ADMIN = "ADMIN"
+export const ROLE_PHOTOGRAPHER = "PHOTOGRAPHER"
+export const ROLE_EVENT_MANAGER = "EVENT_MANAGER"
+export const ROLE_USER = "USER"
+export const ROLE_IMG_MEMBER = "IMG_MEMBER"

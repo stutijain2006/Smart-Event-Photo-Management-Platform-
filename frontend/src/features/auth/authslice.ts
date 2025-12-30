@@ -1,11 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import  {getMe} from "./authAPI";
 
+export type UserRole = {
+    id: string,
+    event_name?: string | null,
+    role_name: string
+}
 export interface User {
     user_id : string;
     email_id: string;
     person_name: string;
-    roles: string[];
+    roles: UserRole[];
     is_email_verified: boolean;
     profile_picture?: string;
 }

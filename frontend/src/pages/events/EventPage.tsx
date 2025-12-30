@@ -6,15 +6,17 @@ import { useAppSelector } from '../../app/hooks';
 import BatchProvider, { useBatch } from '../../components/batch/BatchProvider';
 import BatchToolbar from '../../components/batch/BatchToolbar';
 import SelectableCard from '../../components/batch/SelectableCard';
+import { canManageSpecificEvents} from '../../utils/permission/permissions';
 
 export default function EventsPage() {
     const [events, setEvents] = useState([]);
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
     console.log("USER FROM API:", user);
+    
 
-    const roles = user?.roles || [];
-    const canManage = roles.includes("PHOTOGRAPHER") || roles.includes("ADMIN");
+    const canManage = canManageSpecificEvents(user?.roles);
+    console.log("CAN MANAGE:", canManage);
 
     useEffect(() => {
         api.get("/events/").then(response => {

@@ -11,13 +11,13 @@ import DragDropUpload from "../../components/uploads/DragDropUpload";
 import BatchProvider, { useBatch } from "../../components/batch/BatchProvider";
 import BatchToolbar from "../../components/batch/BatchToolbar";
 import SelectableCard from "../../components/batch/SelectableCard";
+import { canManagePhotos } from "../../utils/permission/permissions";
 
 export default function AlbumDetailPage() {
     const { albumId } = useParams<{ albumId: string }>();
 
     const user = useAppSelector((state) => state.auth.user);
-    const roles = user?.roles || [];
-    const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");
+    const canManage = canManagePhotos(user?.roles);
 
     if (!albumId){
         return (

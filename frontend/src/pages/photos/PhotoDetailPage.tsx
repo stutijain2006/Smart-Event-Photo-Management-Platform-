@@ -9,6 +9,7 @@ import MetadataModal from "../../components/photos/MetadataModal";
 import ShareModal from "../../components/photos/ShareModal";
 import Modal from "../../components/common/Modal";
 import ShowTag from "../../components/tags/TagPeople";
+import { canManagePhotos } from "../../utils/permission/permissions";
 
 export default function PhotoDetailPage(){
     const { photoId } = useParams<{ photoId: string }>();
@@ -22,8 +23,7 @@ export default function PhotoDetailPage(){
     const [showTag, setShowTag] = useState(false);
 
     const user = useAppSelector((state) => state.auth.user);
-    const roles = user?.roles || [];
-    const canManage = roles.includes("ADMIN") || roles.includes("PHOTOGRAPHER");
+    const canManage = canManagePhotos(user?.roles);
 
 
     const loadData= async() => {

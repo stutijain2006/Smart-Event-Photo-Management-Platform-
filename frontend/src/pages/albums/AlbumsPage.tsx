@@ -4,6 +4,7 @@ import api from "../../services/api";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import AlbumCard from "../../components/albums/AlbumCard";
 import { useAppSelector } from "../../app/hooks";
+import { canManagePhotos } from "../../utils/permission/permissions";
 
 export default function AlbumPage(){
     const [myAlbums, setMyAlbums] = useState<any[]>([]);
@@ -22,8 +23,7 @@ export default function AlbumPage(){
 
     const { user } = useAppSelector((state) => state.auth);
     console.log("USER FROM API:", user);
-    const roles = user?.roles || [];
-    const canCreateAlbum = roles.includes("PHOTOGRAPHER") || roles.includes("ADMIN");
+    const canManage = canManagePhotos(user?.roles);
 
     useEffect (() => {
         api.get("/my/albums").then(res => setMyAlbums(res.data));
@@ -45,7 +45,7 @@ export default function AlbumPage(){
                     <div className="flex justify-center items-start gap-12 text-[1rem]">
                         <input type = "text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="border p-2 rounded-lg w-[40vw]"></input>
 
-                        {canCreateAlbum && (
+                        {canManage && (
                             <button className="border p-2 rounded-lg w-[40vw]"> + Create Album </button>
                         )}
                     </div>
