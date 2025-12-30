@@ -356,6 +356,7 @@ class AlbumPhotoManage(APIView):
         return Response({"message": "Photo removed from album successfully"}, status=status.HTTP_200_OK)
     
 class CreatePersonTag(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
         user_id = request.data.get("user_id")

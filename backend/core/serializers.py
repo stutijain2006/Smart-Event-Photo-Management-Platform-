@@ -197,7 +197,7 @@ class AlbumAddPhotoSerializer(serializers.ModelSerializer):
 
 class AdminPeopleSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="person_name")
-    email_id = serializers.EmailField(source="email_id")
+    email_id = serializers.EmailField()
     roles = serializers.SerializerMethodField()
 
     class Meta:
@@ -210,4 +210,6 @@ class AdminPeopleSerializer(serializers.ModelSerializer):
         ]
     
     def get_roles(self, obj):
-        return [role.role_name for role in obj.roles.all()]
+        return list(
+            obj.userrole_set.select_related("role_id").values_list("role_id__role_name", flat = True)
+        )

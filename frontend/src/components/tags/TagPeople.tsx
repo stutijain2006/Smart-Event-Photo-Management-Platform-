@@ -21,7 +21,7 @@ export default function TagPeople({type, objectId, onClose}: Props){
     }, []);
     
     const tagPerson = async (userId : string) => {
-        await api.post("/tags/person", {
+        await api.post("/tags/person/", {
             user_id : userId,
             type,
             object_id: objectId
