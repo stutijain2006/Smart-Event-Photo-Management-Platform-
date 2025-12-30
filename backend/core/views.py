@@ -284,15 +284,16 @@ class PhotoCommentListCreateView(generics.ListCreateAPIView):
         return[permissions.IsAuthenticated(), IsNotUser()]
     
     def get_queryset(self):
-        photo_id = self.kwargs('photo_id')
-        return Comments.objects.filter(photo_id=photo_id).order_by('-created_at')
+        photo_id = self.kwargs['photo_id']
+        return Comments.objects.filter(photo_id__photo_id=photo_id).order_by('-created_at')
     
     def perform_create(self, serializer):
         photo_id = self.kwargs('photo_id')
-        serializer.save(photo_id=photo_id, user_id=self.request.user)
+        photo = Photo.objects.get(photo_id=photo_id)
+        serializer.save(photo_id=photo, user_id=self.request.user)
 
 class PhotoLikeView(APIView):
-    permission_classes = [permissions.IsAuthenticated | IsNotUser]
+    permission_classes = [permissions.IsAuthenticated , IsNotUser]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)
         user = request.user
@@ -311,17 +312,17 @@ class PhotoLikeView(APIView):
             return Response({"message": "Like added successfully"}, status=status.HTTP_200_OK)
 
 class DownloadPhoto(APIView):
-    permission_classes = [permissions.IsAuthenticated | IsNotUser]
+    permission_classes = [permissions.IsAuthenticated, IsNotUser]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)
         user = request.user
         variant = request.data.get("variant")
         if variant == "original":
-            file_url = Photo.file_path_original
+            file_url = photo.file_path_original
         elif variant == "watermarked":
-            file_url = Photo.file_path_watermarked or Photo.file_path_original
+            file_url = photo.file_path_watermarked or photo.file_path_original
         else:
-            file_url = Photo.file_path_thumbnail or Photo.file_path_original
+            file_url = photo.file_path_thumbnail or photo.file_path_original
 
         download = Download.objects.create(photo_id=photo, user_id=user, variant=variant)
         photo.download_count = Download.objects.filter(photo_id=photo).count()
