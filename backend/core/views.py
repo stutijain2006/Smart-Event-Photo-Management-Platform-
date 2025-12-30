@@ -331,6 +331,13 @@ class DownloadPhoto(APIView):
         
 class AlbumPhotoManage(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, album_id):
+        album = get_object_or_404(Album, album_id=album_id)
+        photos = album.photos.all()
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     def post(self, request, album_id):
         album = Album.objects.get(album_id=album_id)
         if album.created_by != request.user and not request.user.is_superuser:
