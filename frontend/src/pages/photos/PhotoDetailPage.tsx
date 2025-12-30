@@ -28,7 +28,8 @@ export default function PhotoDetailPage(){
 
     const loadData= async() => {
         const photos= await api.get(`/photos/`);
-        setPhoto(photos.data.find((p: any) => p.photo_id === photoId));
+        const found = photos.data.find((p: any) => p.photo_id === photoId);
+        setPhoto(found || null);
 
         const c = await api.get(`/photos/${photoId}/comments`);
         setComments(c.data);
@@ -53,14 +54,14 @@ export default function PhotoDetailPage(){
         window.open(photo.file_path_original, "_blank");
     };
 
-    if (!photoId) return (<div>Loading...</div>);
+    if (!photo) return (<div>Loading...</div>);
 
     return (
         <DashboardLayout>
             <div className="flex flex-col justify-center items-center p-6">
                 <div className="flex justify-around items-center px-4">
                     <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
-                    <div className="text-[1.3rem] font-bold">{photo.taken_at}</div>
+                    <div className="text-[1.3rem] font-bold">{photo.taken_at  || "-"}</div>
                 </div>
                 <img src= {photo.file_path_original} alt= "photo" className="w-[70vw] h-[70vh] object-contain rounded-lg" />
                 <div className="flex items-start justify-around px-4"> 
@@ -79,7 +80,7 @@ export default function PhotoDetailPage(){
                 </div>
             </div>
 
-            <Modal isOpen={showShare} onClose={() => setShowShare(false)}><ShareModal photoId={photoId} /></Modal>
+            <Modal isOpen={showShare} onClose={() => setShowShare(false)}><ShareModal photoId={photoId!} /></Modal>
             <Modal isOpen={showDetails} onClose={() => setShowDetails(false)}><MetadataModal metadata={photo.photo_metadata} /></Modal>
             <Modal isOpen={showDownload} onClose={() => setShowDownload(false)}><DownloadPhotoModal onDownload = {downloadPhoto} /></Modal>
             <Modal isOpen={showComments} onClose={() => setShowComments(false)}><CommentsModal 
