@@ -439,10 +439,12 @@ class RoleChangeRequestReview(APIView):
         
 
 class PhotoUpload(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsPhotographerOrAdmin]
 
     def post(self, request):
         uploaded_files = request.FILES.getlist('files') or request.FILES.getlist('file')
+        print(uploaded_files)
         if not uploaded_files:
             return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -450,12 +452,11 @@ class PhotoUpload(APIView):
         album_id = request.data.get("album_id")
         taken_at = request.data.get("taken_at")
 
-        event = Events.object.filter(event_id = event_id).first() if event_id else None
-        album = Album.object.filter(album_id = album_id).first() if album_id else None
+        event = Events.objects.filter(event_id = event_id).first() if event_id else None
+        album = Album.objects.filter(album_id = album_id).first() if album_id else None
 
-        created_files = []
         for f in uploaded_files:
-            filename = uploaded_files.name
+            filename = uploaded_files[0].name
             save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
             saved_path = default_storage.save(save_path, f)
        
@@ -465,8 +466,8 @@ class PhotoUpload(APIView):
             file_url = None
 
         photo = Photo.objects.create(
-            event_id = Events.objects.get(event_id = event_id) if event_id else None,
-            album_id = Album.objects.get(album_id = album_id) if album_id else None,
+            event_id = event,
+            album_id = album,
             uploaded_by = request.user,
             file_path_original = file_url,
             file_path_thumbnail = None,

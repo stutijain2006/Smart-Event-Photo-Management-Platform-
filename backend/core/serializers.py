@@ -77,6 +77,7 @@ class PhotoSerializer(serializers.ModelSerializer):
             "like_count",
             "view_count",
             "download_count",
+            "created_by"
         ]
 
 class RegisterSerializer(serializers.ModelSerializer):

@@ -99,7 +99,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                         {selectionMode? "Cancel" : "Select"}
                     </button>
                     {canManage && (
-                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] h-[40vh] rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
+                        <button className="flex gap-4 bg-gray-300 px-4 py-2 w-[10vw] rounded-lg" onClick={() => setShowTag(true)}>+ Tag People</button>
                     )}
                 </div>
 
@@ -107,7 +107,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                     <div className="flex flex-col justify-center items-center w-[60vw]">
                         <DragDropUpload onFilesSelected={handleFilesSelected} />
                         {uploading && (
-                            <div className="flex gap-4 bg-gray-300 px-4 py-2 w-[40vw] h-[40vh] rounded-lg">Uploading...</div>
+                            <div className="flex gap-4 bg-gray-300 px-4 py-2 rounded-lg">Uploading...</div>
                         )}
                     </div>
                 )}
