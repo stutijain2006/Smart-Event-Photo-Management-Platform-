@@ -226,7 +226,7 @@ class EventListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated(), IsEventManagerOrAdmin()]
+        return[permissions.IsAuthenticated, IsEventManagerOrAdmin]
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -239,7 +239,7 @@ class AlbumListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated(), IsPhotographerOrAdmin()]
+        return[permissions.IsAuthenticated, IsPhotographerOrAdmin]
     
     def get_queryset(self):
         qs= super().get_queryset()
@@ -259,7 +259,7 @@ class PhotoListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated(), IsPhotographerOrAdmin()]
+        return[permissions.IsAuthenticated, IsPhotographerOrAdmin]
     
     def get_queryset(self):
         qs= super().get_queryset()
@@ -275,25 +275,23 @@ class PhotoListCreateView(generics.ListCreateAPIView):
         serializer.save(uploaded_by = self.request.user)
 
 class PhotoCommentListCreateView(generics.ListCreateAPIView):
+    authentication_classes= [CsrfExemptSessionAuthentication]
     queryset = Comments.objects.all().order_by("-created_at")
     serializer_class = CommentSerializer
-
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated(), IsNotUser()]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         photo_id = self.kwargs['photo_id']
         return Comments.objects.filter(photo_id__photo_id=photo_id).order_by('-created_at')
     
     def perform_create(self, serializer):
-        photo_id = self.kwargs('photo_id')
+        photo_id = self.kwargs['photo_id']
         photo = Photo.objects.get(photo_id=photo_id)
         serializer.save(photo_id=photo, user_id=self.request.user)
 
 class PhotoLikeView(APIView):
-    permission_classes = [permissions.IsAuthenticated , IsNotUser]
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)
         user = request.user
@@ -312,6 +310,7 @@ class PhotoLikeView(APIView):
             return Response({"message": "Like added successfully"}, status=status.HTTP_200_OK)
 
 class DownloadPhoto(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsNotUser]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)

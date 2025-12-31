@@ -157,6 +157,13 @@ class CommentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at"
         ]
+        read_only_fields = [
+            "comment_id",
+            "photo_id",
+            "user_id",
+            "created_at",
+            "updated_at"
+        ]
 
 class DownloadSerializer(serializers.ModelSerializer):
     class Meta:
