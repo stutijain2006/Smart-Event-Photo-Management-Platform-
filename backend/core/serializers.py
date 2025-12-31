@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole
+from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -175,6 +175,11 @@ class DownloadSerializer(serializers.ModelSerializer):
             "variant",
             "created_at"
         ]
+
+class PhotoMetaDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= PhotoMetaData
+        exclude = ["photo_id"]
 
 class PersonTagSerializer(serializers.ModelSerializer):
     class Meta:

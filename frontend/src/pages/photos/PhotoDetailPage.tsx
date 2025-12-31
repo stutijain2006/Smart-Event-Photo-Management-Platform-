@@ -81,7 +81,7 @@ export default function PhotoDetailPage(){
             </div>
 
             <Modal isOpen={showShare} onClose={() => setShowShare(false)}><ShareModal photoId={photoId!} /></Modal>
-            <Modal isOpen={showDetails} onClose={() => setShowDetails(false)}><MetadataModal metadata={photo.photo_metadata} /></Modal>
+            <Modal isOpen={showDetails} onClose={() => setShowDetails(false)}><MetadataModal photoId={photoId!} /></Modal>
             <Modal isOpen={showDownload} onClose={() => setShowDownload(false)}><DownloadPhotoModal onDownload = {downloadPhoto} /></Modal>
             <Modal isOpen={showComments} onClose={() => setShowComments(false)}><CommentsModal 
             photoId={photoId} refresh={loadData} comments={comments} /></Modal>

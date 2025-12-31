@@ -16,7 +16,7 @@ export default function AdminPeoplePage() {
     const loadData = async() => {
         const [peopleRes, reqRes, eventRes] = await Promise.all([
             api.get('/admin/people/'),
-            api.get('/role-requests/admin'),
+            api.get('/role-requests/admin/'),
             api.get('/events/')
         ]);
 
@@ -35,7 +35,7 @@ export default function AdminPeoplePage() {
             <input placeholder='Search People' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-full' />
 
             <Section title="Events">
-                {events.map(event => {
+                {events.map(event => (
                     <div key={event.event_id} className='flex items-center justify-center bg-gray-300 rounded-lg shadow'>
                         <div className='flex flex-col items-center justify-center'>
                             <div className='font-bold'>{event.name}</div>
@@ -47,37 +47,37 @@ export default function AdminPeoplePage() {
                         </div>
                         <button className='text-blue-600'>Manage </button>
                     </div>
-                })}
+                ))}
             </Section>
 
             <Section title="People List">
-                {filteredPeople.map(p => {
+                {filteredPeople.map(p => (
                     <div key={p.user_id} className='grid grid-cols-3 bg-white p-3 rounded-lg shadow'>
                         <div className='font-bold'>{p.name}</div>
                         <div className='text-[0.8rem] text-gray-600'>{p.email}</div>
                         <button className='text-blue-600'>Manage Access </button>
                     </div>
-                })}
+                ))}
             </Section>
 
             <Section title="Pending Requests">
-                {requests.map(r => {
+                {requests.map(r => (
                     <div key={r.id} className='grid grid-cols-4 bg-white p-3 rounded-lg shadow'>
                         <div className='font-bold'>{r.user_name}</div>
                         <div className='text-[0.8rem] text-gray-600'>{r.email}</div>
                         <div className='text-[0.8rem] text-gray-600'>{r.requested_role}</div>
                         <div className='flex gap-2'>
-                            <button className='text-green-600' onClick={() => handleReview(r.id, "approve")} >Accept</button>
-                            <button className='text-red-600' onClick={() => handleReview(r.id, "reject")}>Decline</button>
+                            <button className='text-green-600' onClick={() => handleReview(r.request_id, "approve")} >Accept</button>
+                            <button className='text-red-600' onClick={() => handleReview(r.request_id, "reject")}>Decline</button>
                         </div>
                     </div>
-                })}
+                ))}
             </Section>
         </DashboardLayout>
     );
 
     async function handleReview(id: string, action: "approve" | "reject") {
-        await api.put(`/role-requests/${id}/review`, {action});
+        await api.post(`/role-requests/${id}/review`, {status: action});
         loadData();
     }
 };

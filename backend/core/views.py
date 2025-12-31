@@ -30,7 +30,8 @@ from .serializers import (
     PersonTagSerializer,
     AlbumAddPhotoSerializer,
     RoleChangeRequestSerializer,
-    AdminPeopleSerializer
+    AdminPeopleSerializer,
+    PhotoMetaDataSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -255,24 +256,40 @@ class PhotoListCreateView(generics.ListCreateAPIView):
     authentication_classes= [CsrfExemptSessionAuthentication]
     queryset = Photo.objects.all().order_by("-uploaded_at")
     serializer_class = PhotoSerializer
-
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated, IsPhotographerOrAdmin]
     
     def get_queryset(self):
-        qs= super().get_queryset()
-        event_id = self.request.query_params.get('event_id')
-        album_id = self.request.query_params.get('album_id')
-        if event_id is not None:
+        qs = Photo.objects.all().order_by("-uploaded_at")
+        event_id = self.request.query_params.get("event_id")
+        album_id = self.request.query_params.get("album_id")
+
+        if event_id:
             qs = qs.filter(event_id=event_id)
-        if album_id is not None:
+        if album_id:
             qs = qs.filter(album_id=album_id)
+
         return qs
-    
+
     def perform_create(self, serializer):
-        serializer.save(uploaded_by = self.request.user)
+        serializer.save(uploaded_by=self.request.user)
+
+class PhotoLikeView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, photo_id):
+        photo = get_object_or_404(Photo, photo_id = photo_id)
+        user = request.user
+
+        with transaction.atomic():
+            like, created = PhotoLike.objects.get_or_create(user_id=user, photo_id=photo)
+            if not created:
+                like.delete()
+                liked= False
+            else:
+                liked= True
+            photo.like_count = PhotoLike.objects.filter(photo_id=photo).count()
+            photo.save(update_fields=["like_count"])
+        return Response({"liked": liked}, status=status.HTTP_200_OK)
 
 class PhotoCommentListCreateView(generics.ListCreateAPIView):
     authentication_classes= [CsrfExemptSessionAuthentication]
@@ -288,26 +305,6 @@ class PhotoCommentListCreateView(generics.ListCreateAPIView):
         photo_id = self.kwargs['photo_id']
         photo = Photo.objects.get(photo_id=photo_id)
         serializer.save(photo_id=photo, user_id=self.request.user)
-
-class PhotoLikeView(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, photo_id):
-        photo = Photo.objects.get(photo_id=photo_id)
-        user = request.user
-        existing = PhotoLike.objects.filter(photo_id=photo, user_id=user).first()
-
-        if existing:
-            existing.delete()
-            photo.like_count = PhotoLike.objects.filter(photo_id=photo).count()
-            photo.save(update_fields=["like_count"])
-            return Response({"message": "Like removed successfully"}, status=status.HTTP_200_OK)
-        else:
-            like = PhotoLike.objects.create(photo_id=photo, user_id=user)
-            photo.like_count = PhotoLike.objects.filter(photo_id=photo).count()
-            photo.save(update_fields=["like_count"])
-            serializer = PhotoLikeSerializer(like)
-            return Response({"message": "Like added successfully"}, status=status.HTTP_200_OK)
 
 class DownloadPhoto(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
@@ -403,6 +400,7 @@ class CreatePersonTag(APIView):
     
     
 class RoleChangeRequestCreate(generics.CreateAPIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     queryset = RoleChangeRequest.objects.all()
     serializer_class = RoleChangeRequestSerializer
@@ -411,18 +409,18 @@ class RoleChangeRequestCreate(generics.CreateAPIView):
         sequelizer.save(user_id=self.request.user, status = "PENDING")
 
 class RoleChangeRequestList(generics.ListAPIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated,  IsAdmin]
     queryset = RoleChangeRequest.objects.all().order_by("-created_at")
     serializer_class = RoleChangeRequestSerializer
 
 
 class RoleChangeRequestReview(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
     def post(self, request, request_id):
         action = request.data.get("status")
         action = action.strip().lower()
-        if action not in ("pending", "approve"):
+        if action not in ("reject", "approve"):
             return Response({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
         role_request = get_object_or_404(RoleChangeRequest, request_id=request_id)
         if action == "approve":
@@ -432,10 +430,10 @@ class RoleChangeRequestReview(APIView):
                     role_id = role_request.target_role_id,
                     event_id = role_request.event_id
                 )
-                role_request.approve(role_request.user)
+                role_request.approve(request.user)
             return Response({"message": "Role change request approved successfully"}, status=status.HTTP_200_OK)
         else:
-            role_request.reject(role_request.reviewed_by)
+            role_request.reject(request.user)
             return Response({"message": "Role change request rejected successfully"}, status=status.HTTP_200_OK)
         
 
@@ -484,7 +482,7 @@ class PhotoUpload(APIView):
 def get_exif(img: Image.Image) -> dict:
     raw_exif = {}
     try:
-        raw_exif = img._getexif()
+        raw_exif = img._getexif() or {}
     except Exception:
         pass
     exif = {}
@@ -496,18 +494,26 @@ def get_exif(img: Image.Image) -> dict:
 def extract_and_save_metadata(photo: Photo):
     image_path = photo.file_path_original
     if not image_path:
-        return
-    img = get_exif(Image.open(image_path))
-    camera_make = img.get("Make")
-    camera_model = img.get("Model")
-    aperture = img.get("FNumber")
+        raise Exception("Image not found")
+    full_path = os.path.join(settings.MEDIA_ROOT, image_path.lstrip("/"))
+    if not os.path.exists(full_path):
+        raise Exception("Image not found")
+    exif = Image.open(full_path)
+    img = get_exif(exif)
+
+    def _str(v):
+        return str(v) if v is not None else None 
+    
+    camera_make = _str(img.get("Make"))
+    camera_model = _str(img.get("Model"))
+    aperture = _str(img.get("FNumber"))
     lens_model = None
-    focal_length = img.get("FocalLength")
-    exposure_time = img.get("ExposureTime")
-    iso = img.get("ISOSpeedRatings") or img.get("PhotometricInterpretation")
-    flash = img.get("Flash")
-    width = img.get("ExifImageWidth")
-    height = img.get("ExifImageHeight")
+    focal_length = _str(img.get("FocalLength"))
+    exposure_time = _str(img.get("ExposureTime"))
+    iso = _str(img.get("ISOSpeedRatings")) or _str(img.get("PhotometricInterpretation"))
+    flash = _str(img.get("Flash"))
+    width = str(exif.width)
+    height = str(exif.height)
     gps_info = img.get("GPSInfo")
     gps_cords = None
     if gps_info:
@@ -516,7 +522,7 @@ def extract_and_save_metadata(photo: Photo):
                 return coord[0] + coord[1] / 60 + coord[2] / 3600
             lat = _conv(gps_info[2])
             long = _conv(gps_info[4])
-            gps_cords = (lat, long)
+            gps_cords = f"{lat}, {long}"
         except Exception:
             pass
 
@@ -544,15 +550,26 @@ def extract_and_save_metadata(photo: Photo):
 
 class PhotoMetaDataExtractionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
+    def get(self, request, photo_id):
+        photo = get_object_or_404(Photo, photo_id=photo_id)
+        if not hasattr(photo, "photo_metadata"):
+            return Response(
+                {"metadata" : None},
+                status=status.HTTP_200_OK
+            )
+        from .serializers import PhotoMetaDataSerializer
+        return Response({"metadata": PhotoMetaDataSerializer(photo.photo_metadata).data}, status=status.HTTP_200_OK)
+    
     def post(self, request, photo_id):
-        photo = Photo.objects.get(photo_id=photo_id)
-        if photo.uploaded_by or photo.uploaded_by != request.user and not request.user.is_superuser:
+        photo = get_object_or_404(Photo, photo_id=photo_id)
+        if photo.uploaded_by != request.user and not request.user.is_superuser:
             return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
         try:
             extract_and_save_metadata(photo)
-            from .serializers import PhotoSerializer
-            return Response({"detail": "Metadata extracted successfully","photo": PhotoSerializer(photo).data}, status=status.HTTP_200_OK)
+            from .serializers import PhotoMetaDataSerializer
+            return Response({"message": "Metadata extracted successfully","metadata": PhotoMetaDataSerializer(photo.photo_metadata).data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

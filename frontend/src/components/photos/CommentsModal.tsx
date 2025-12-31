@@ -5,9 +5,10 @@ export default function CommentsModal({photoId, comments, refresh} : any) {
     const [text, setText] = useState("");
 
     const postComment = async() => {
+        if (!text) return;
         await api.post(`/photos/${photoId}/comments/`, {description: text});
         setText("");
-        refresh();
+        await refresh();
     };
 
     return(
