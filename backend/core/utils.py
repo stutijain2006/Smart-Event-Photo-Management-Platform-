@@ -1,6 +1,9 @@
 import random
 import requests
 from django.conf import settings
+from PIL import Image
+from django.core.files import File
+import os
 
 def generate_otp() -> str:
     return f"{random.randint(100000, 999999)}"
@@ -56,3 +59,31 @@ def omniport_revoke_token(token: str, token_type_hint : str = "access_token") ->
     response = requests.post(token_url, data=data)
     response.raise_for_status()
     return response.json()
+
+def generate_variants(photo):
+    original_path = photo.file_original.path
+    img = Image.open(original_path)
+    compressed_path = original_path.replace("original", "compressed")
+    os.makedirs(os.path.dirname(compressed_path), exist_ok=True)
+
+    img.save(compressed_path, optimize=True, quality=50)
+    photo.file_compressed.save(
+        os.path.basename(compressed_path), File(open(compressed_path, "rb"))
+    )
+
+    watermark_path = os.path.join(settings.BASE_DIR, "static", "watermark.png")
+    if not os.path.exists(watermark_path):
+        raise FileNotFoundError("Watermark not found")
+    
+    watermark = Image.open(watermark_path).convert("RGBA")
+    img = img.convert("RGBA")
+    img.paste(watermark, (10,10), watermark)
+
+    watermarked_path = original_path.replace("original", "watermarked")
+    os.makedirs(os.path.dirname(watermarked_path), exist_ok=True)
+    img.save(watermarked_path)
+
+    photo.file_watermarked.save(
+        os.path.basename(watermarked_path), File(open(watermarked_path, "rb"))
+    )
+    photo.save()

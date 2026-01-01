@@ -66,8 +66,14 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                 });
 
                 const uploadPhoto = uploadRes.data;
+                if (!uploadPhoto.photo_id){
+                    console.error("Upload repsonse missing photo_id: ", uploadPhoto);
+                    throw new Error("Upload repsonse missing photo_id");
+                }
 
-                await api.post(`/albums/${albumId}/photos/`, {photo_id: uploadPhoto.photo_id});
+                await api.post(`/albums/${albumId}/photos/`, {
+                    photo_id: uploadPhoto.photo_id
+                });
             }
             await fetchPhotos();
         }catch(error){
@@ -127,7 +133,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                         <SelectableCard key={photo.photo_id} id={photo.photo_id} onClick={() => {
                             if (!selectionMode) navigate(`/photos/${photo.photo_id}`);
                         }} > 
-                            <img src={photo.file_path_thumbnail || photo.file_path_original} alt="photo" className="w-[10vw] h-[10vh] object-cover" />
+                            <img src={photo.file_watermarked || photo.file_original} alt="photo" className="w-[10vw] h-[10vh] object-cover" />
                         </SelectableCard>    
                     ))}
                     </div>

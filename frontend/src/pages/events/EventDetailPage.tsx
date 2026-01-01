@@ -157,7 +157,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
                             if (!selectionMode){ navigate(`/photos/${photo.photo_id}`);
                         }
                         }}>
-                            <img src={photo.file_path_original} alt="photo" className="w-full h-full object-cover rounded" />
+                            <img src={photo.file_original} alt="photo" className="w-full h-full object-cover rounded" />
                         </SelectableCard>
                     ))}
                 </div>

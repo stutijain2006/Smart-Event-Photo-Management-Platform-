@@ -18,6 +18,11 @@ class PersonSerializer(serializers.ModelSerializer):
             "is_email_verified",
             "roles"
         ]
+
+    def get_profile_picture(self, obj):
+        if obj.profile_picture:
+            return obj.profile_picture.url
+        return None
     
     def get_roles(self, obj):
         roles = UserRole.objects.filter(user_id = obj).select_related('role_id')
@@ -73,16 +78,19 @@ class AlbumSerializer(serializers.ModelSerializer):
 
 class PhotoSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name") 
+    file_original = serializers.ImageField(read_only=True)
+    file_watermarked = serializers.ImageField(read_only=True)
+    file_compressed = serializers.ImageField(read_only=True)
+
     class Meta:
         model = Photo
         fields = [
             "photo_id",
             "event_id",
-            "album_id",
             "uploaded_by",
-            "file_path_original",
-            "file_path_watermarked",
-            "file_path_thumbnail",
+            "file_original",
+            "file_watermarked",
+            "file_compressed",
             "uploaded_at",
             "taken_at",
             "status",
@@ -245,7 +253,34 @@ class AdminPeopleSerializer(serializers.ModelSerializer):
             obj.userrole_set.select_related("role_id").values_list("role_id__role_name", flat = True)
         )
     
-class RoleSerializer(serializers.ModelSerializer):
+class MeSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
     class Meta:
-        model = Role
-        fields = ["role_id", "role_name"]
+        model = Person
+        fields = [
+            "user_id",
+            "email_id",
+            "person_name",
+            "roles",
+            "short_bio",
+            "profile_picture",
+            "batch",
+            "department",
+            "is_email_verified"
+        ]
+
+    def get_profile_picture(self, obj):
+        if obj.profile_picture:
+            return obj.profile_picture.url
+        return None
+    
+    def get_roles(self, obj):
+        roles = UserRole.objects.filter(user_id = obj).select_related('role_id', 'event_id')
+        return[
+            {
+                "role_name": r.role_id.role_name,
+                "event_name": str(r.event_id_id) if r.event_id else None
+            }
+            for r in roles
+        ]

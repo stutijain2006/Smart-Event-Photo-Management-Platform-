@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import (
     RegisterView,
     VerifyEmail,
@@ -67,3 +69,4 @@ urlpatterns =[
     path("people/batch-deactivate/", PeopleBatchDeactivate.as_view(), name="people-batch-deactivate"),
     path("roles/", RoleListView.as_view(), name="role-list")
 ]
+urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -47,12 +47,12 @@ export default function PhotoDetailPage(){
     }
 
     const downloadPhoto = async(variant: string) => {
-        const res = await api.post(`/photos/${photoId}/download/`, {variant});
-        const fileUrl = res.data.dile_url; 
-        window.open(fileUrl, "_blank");
-        setPhoto((prev:any) => {
-            return {...prev, download_count: prev.download_count + 1}
-        })
+        const res = await api.post(`/photos/${photoId}/download/`, {variant}, {responseType: "blob"});
+        const blob = new Blob([res.data]);
+        const link = document.createElement("a");
+        link.href= window.URL.createObjectURL(blob);
+        link.download = `${photoId}-${variant}.jpg`;
+        link.click();
     };
 
     if (!photo) return (<div>Loading...</div>);
@@ -64,7 +64,7 @@ export default function PhotoDetailPage(){
                     <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
                     <div className="text-[1.3rem] font-bold">{photo.taken_at  || "-"}</div>
                 </div>
-                <img src= {photo.file_path_original} alt= "photo" className="w-[70vw] h-[70vh] object-contain rounded-lg" />
+                <img src= {photo.file_original} alt= "photo" className="w-[70vw] h-[70vh] object-contain rounded-lg" />
                 <div className="flex items-start justify-around px-4"> 
                     <button onClick={() => setShowShare(true)} className="bg-gray-300 p-2 rounded-lg"> Share </button>
                     <div className="flex justify-center items-center gap-3">

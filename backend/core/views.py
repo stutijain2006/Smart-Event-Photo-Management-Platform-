@@ -16,6 +16,8 @@ from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
+from django.http import FileResponse
+from .utils import generate_variants
 from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState
 from .serializers import (
     RegisterSerializer,
@@ -33,7 +35,7 @@ from .serializers import (
     RoleChangeRequestSerializer,
     AdminPeopleSerializer,
     PhotoMetaDataSerializer,
-    RoleSerializer
+    MeSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -318,23 +320,24 @@ class DownloadPhoto(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request, photo_id):
-        photo = Photo.objects.get(photo_id=photo_id)
+        photo = get_object_or_404(Photo, photo_id=photo_id)
         user = request.user
         variant = request.data.get("variant", "original")
-        if variant == "original":
-            file_url = photo.file_path_original
+        if variant == "compressed":
+            file_field = photo.file_compressed or photo.file_original
         elif variant == "watermarked":
-            file_url = photo.file_path_watermarked or photo.file_path_original
+            file_field = photo.file_watermarked or photo.file_original
         else:
-            file_url = photo.file_path_thumbnail or photo.file_path_original
-
-        download = Download.objects.create(photo_id=photo, user_id=user, variant=variant)
-        photo.download_count = Download.objects.filter(photo_id=photo).count()
-        photo.save(update_fields=["download_count"])
+            file_field = photo.file_original
+        
+        Download.objects.create(
+            photo_id=photo,
+            user_id= user,
+            variant=variant
+        )     
         return Response({
-            "file_url": file_url,
-            "variant" : variant,
-        }, status=status.HTTP_200_OK)        
+            "file_url": file_field.url
+        }, status=status.HTTP_200_OK)
         
 class AlbumPhotoManage(APIView):
     authentication_classes= [CsrfExemptSessionAuthentication]
@@ -351,11 +354,11 @@ class AlbumPhotoManage(APIView):
         if album.created_by != request.user and not request.user.is_superuser:
             return Response({"message": "You are not authorized to perform this action"}, status=status.HTTP_403_FORBIDDEN)
         serializer = AlbumAddPhotoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        photo_id = serializer.validated_data['photo_id']
-        photo = Photo.objects.get(photo_id=photo_id)
-        album.photos.add(photo)
+        photos = get_object_or_404(Photo, photo_id = serializer.validated_data['photo_id'])
+        album.photos.add(photos)
         return Response({"message": "Photo added to album successfully"}, status=status.HTTP_200_OK)
     
     def delete(self, request, album_id):
@@ -365,9 +368,8 @@ class AlbumPhotoManage(APIView):
         serializer = AlbumAddPhotoSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        photo_id = serializer.validated_data['photo_id']
-        photo = Photo.objects.get(photo_id=photo_id)
-        album.photos.remove(photo)
+        photos= get_object_or_404(Photo, photo_id = serializer.validated_data['photo_id'])
+        album.photos.remove(photos)
         return Response({"message": "Photo removed from album successfully"}, status=status.HTTP_200_OK)
     
 class CreatePersonTag(APIView):
@@ -463,32 +465,25 @@ class PhotoUpload(APIView):
         taken_at = request.data.get("taken_at")
 
         event = Events.objects.filter(event_id = event_id).first() if event_id else None
+        created_photos = []
 
         for f in uploaded_files:
-            filename = uploaded_files[0].name
-            save_path = os.path.join("photos", f"{uuid.uuid4()}.{filename}")
-            saved_path = default_storage.save(save_path, f)
-       
-        try:
-            file_url = default_storage.url(saved_path)
-        except FileNotFoundError:
-            file_url = None
-
-        photo = Photo.objects.create(
-            event_id = event,
-            uploaded_by = request.user,
-            file_path_original = file_url,
-            file_path_thumbnail = None,
-            file_path_watermarked = None,
-            taken_at = taken_at or None,
-            status = "processing"
-        )
-        try:
-            extract_and_save_metadata(photo)
-        except Exception as e:
-            photo.status = "processing"
-            photo.save()      
-        serializer = PhotoSerializer(photo)
+            photo = Photo.objects.create(
+                event_id = event,
+                uploaded_by = request.user,
+                file_original = f,
+                taken_at = taken_at or None,
+                status = "processing"
+            )
+            generate_variants(photo)
+            try:
+                extract_and_save_metadata(photo)
+                photo.status = "ready"
+            except Exception as e:
+                photo.status = "processing"
+            photo.save()  
+            created_photos.append(photo)    
+        serializer = PhotoSerializer(created_photos, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 def get_exif(img: Image.Image) -> dict:
@@ -504,7 +499,7 @@ def get_exif(img: Image.Image) -> dict:
     return exif
 
 def extract_and_save_metadata(photo: Photo):
-    image_path = photo.file_path_original
+    image_path = photo.file_original
     if not image_path:
         raise Exception("Image not found")
     full_path = os.path.join(settings.MEDIA_ROOT, image_path.lstrip("/"))
@@ -679,26 +674,7 @@ class MeView(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
-        user = request.user
-        print("AUTH:", request.user, request.user.is_authenticated)
-        roles = UserRole.objects.filter(user_id = user).select_related("role_id", "event_id")
-        roles_data = [
-            {
-                "role_name": r.role_id.role_name,
-                "event_name": str(r.event_id_id) if r.event_id else None
-            }
-            for r in roles
-        ]
-        return Response({"user_id": str(user.user_id),
-                        "email_id" : user.email_id,
-                        "person_name": user.person_name,
-                        "roles": roles_data,
-                        "short_bio" : user.short_bio,
-                        "batch": user.batch,
-                        "department": user.department,
-                        "profile_picture": user.profile_picture,
-                        "is_email_verified": user.is_email_verified
-                        })
+        return Response(MeSerializer(request.user).data)
     
     def put(self, request):
         user = request.user
@@ -706,9 +682,10 @@ class MeView(APIView):
         user.batch = request.data.get("batch", user.batch)
         user.department = request.data.get("department", user.department)
         user.short_bio = request.data.get("short_bio", user.short_bio)
-        user.profile_picture = request.data.get("profile_picture", user.profile_picture)
+        if "profile_picture" in request.FILES:
+            user.profile_picture = request.FILES["profile_picture"]
         user.save()
-        return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "Profile updated successfully", "user": MeSerializer(user).data}, status=status.HTTP_200_OK)
 
 
 class AdminPeople(APIView):
@@ -756,4 +733,4 @@ class PeopleBatchDeactivate(APIView):
     
 class RoleListView(generics.ListAPIView):
     queryset= Role.objects.all()
-    serializer_class = RoleSerializer
+    serializer_class = MeSerializer

@@ -12,7 +12,7 @@ class Person (AbstractUser):
     username = None
     email_id = models.EmailField(unique=True)
     person_name = models.CharField(max_length=100)
-    profile_picture = models.URLField(null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     short_bio = models.TextField(max_length=300, blank=True)
     batch = models.CharField(max_length=10, blank=True)
     department = models.CharField(max_length=50, blank=True)
@@ -104,22 +104,21 @@ class Album(models.Model):
 class Photo(models.Model):
     photo_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event_id= models.ForeignKey("Events", on_delete=models.CASCADE, null=True, blank=True)
-    album_id = models.ForeignKey("Album", on_delete=models.CASCADE, null=True, blank=True)
     uploaded_by = models.ForeignKey("Person", on_delete=models.CASCADE, null=True, blank=True, related_name= "photos_uploaded")
-    file_path_original = models.URLField(max_length=200)
-    file_path_watermarked= models.URLField(max_length=200, null=True, blank=True)
-    file_path_thumbnail= models.URLField(max_length=200, null=True, blank=True)
+    file_original = models.ImageField(upload_to='photos/original')
+    file_compressed= models.ImageField(upload_to='photos/compressed', null=True, blank=True)
+    file_watermarked= models.ImageField(upload_to='photos/watermarked', null=True, blank=True)
     uploaded_at = models.DateField(auto_now_add=True)
     taken_at= models.TimeField(null=True, blank=True)   
     status = models.CharField(max_length=50, default="pending")
     like_count = models.IntegerField(default=0)
     view_count = models.IntegerField(default=0)
     download_count = models.IntegerField(default=0) 
+    albums = models.ManyToManyField(Album, related_name="photos", blank=True)
 
     def __str__(self):
         return f"Photo: {self.photo_id}-{self.event_id}"
     
-Photo.add_to_class("albums", models.ManyToManyField(Album, related_name="photos", blank=True))
     
 class PhotoMetaData(models.Model):
     photo_metadata_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
