@@ -46,12 +46,13 @@ export default function PhotoDetailPage(){
         });
     }
 
-    const downloadPhoto = async() => {
-        await api.post(`/photos/${photoId}/download/`, {variant: "original"});
+    const downloadPhoto = async(variant: string) => {
+        const res = await api.post(`/photos/${photoId}/download/`, {variant});
+        const fileUrl = res.data.dile_url; 
+        window.open(fileUrl, "_blank");
         setPhoto((prev:any) => {
             return {...prev, download_count: prev.download_count + 1}
         })
-        window.open(photo.file_path_original, "_blank");
     };
 
     if (!photo) return (<div>Loading...</div>);

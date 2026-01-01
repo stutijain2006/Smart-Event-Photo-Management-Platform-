@@ -316,11 +316,11 @@ class PhotoCommentListCreateView(generics.ListCreateAPIView):
 
 class DownloadPhoto(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated, IsNotUser]
+    permission_classes = [permissions.IsAuthenticated]
     def post(self, request, photo_id):
         photo = Photo.objects.get(photo_id=photo_id)
         user = request.user
-        variant = request.data.get("variant")
+        variant = request.data.get("variant", "original")
         if variant == "original":
             file_url = photo.file_path_original
         elif variant == "watermarked":
@@ -331,8 +331,10 @@ class DownloadPhoto(APIView):
         download = Download.objects.create(photo_id=photo, user_id=user, variant=variant)
         photo.download_count = Download.objects.filter(photo_id=photo).count()
         photo.save(update_fields=["download_count"])
-        serializer = DownloadSerializer(download)
-        return Response(serializer.data, status=status.HTTP_200_OK)        
+        return Response({
+            "file_url": file_url,
+            "variant" : variant,
+        }, status=status.HTTP_200_OK)        
         
 class AlbumPhotoManage(APIView):
     authentication_classes= [CsrfExemptSessionAuthentication]
