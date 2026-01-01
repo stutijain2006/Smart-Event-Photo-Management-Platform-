@@ -15,7 +15,8 @@ from django.db import transaction
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication
-from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, PhotoMetaData, OAuthState
+from rest_framework.exceptions import ValidationError
+from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -31,7 +32,8 @@ from .serializers import (
     AlbumAddPhotoSerializer,
     RoleChangeRequestSerializer,
     AdminPeopleSerializer,
-    PhotoMetaDataSerializer
+    PhotoMetaDataSerializer,
+    RoleSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -405,8 +407,10 @@ class RoleChangeRequestCreate(generics.CreateAPIView):
     queryset = RoleChangeRequest.objects.all()
     serializer_class = RoleChangeRequestSerializer
     
-    def perform_create(self, sequelizer):
-        sequelizer.save(user_id=self.request.user, status = "PENDING")
+    def perform_create(self, serializer):
+        if not serializer.validated_data.get("target_role_id"):
+            raise ValidationError("target_role_id is required")
+        serializer.save(user_id=self.request.user, status="PENDING") 
 
 class RoleChangeRequestList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated,  IsAdmin]
@@ -610,16 +614,24 @@ class MyAlbumView(APIView):
         serializer = AlbumSerializer(albums, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+
 class AdminAssignRole(APIView):
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
     def post(self, request):
+        print("HIT", request.path)
         user_id = request.data.get("user_id")
-        role_id = request.data.get("role_id")
+        role_name = request.data.get("role_name")
         event_id = request.data.get("event_id")
-        if not user_id or not role_id or not event_id:
+        if not user_id or not role_name :
             return Response({"message": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
-        UserRole.objects.get_or_create(user_id = user_id, role_id = role_id, event_id = event_id)
+        user = get_object_or_404(Person, user_id=user_id)
+        role = get_object_or_404(Role, role_name=role_name)
+        event = None
+        if event_id :
+            event = get_object_or_404(Events, event_id=event_id)
+        UserRole.objects.update_or_create(user_id=user, role_id=role, event_id=event)
         return Response({"message": "Role assigned successfully"}, status=status.HTTP_200_OK)
 
 class PhotoSearch(generics.ListAPIView):
@@ -725,3 +737,7 @@ class PeopleBatchDeactivate(APIView):
         ids = request.data.get("person_ids", [])
         Person.objects.filter(person_id__in = ids).update(is_active = False)
         return Response({"message": "People deactivated successfully"}, status=status.HTTP_200_OK)
+    
+class RoleListView(generics.ListAPIView):
+    queryset= Role.objects.all()
+    serializer_class = RoleSerializer

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData
+from django.db.models import F
+from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData, Role
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,6 +31,7 @@ class PersonSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name")
+    roles = serializers.SerializerMethodField()
     class Meta:
         model = Events
         fields = [
@@ -43,7 +45,18 @@ class EventSerializer(serializers.ModelSerializer):
             "created_by",
             "event_url",
             "event_qr_code",
+            "roles" 
         ]
+    
+    def get_roles(self, obj):
+        return list(
+            UserRole.objects.filter(event_id = obj).
+            select_related("user_id", "role_id").values(
+                user_uuid = F("user_id__user_id"),
+                person_name = F("user_id__person_name"),
+                role_name = F("role_id__role_name")
+            )
+        )
 
 class AlbumSerializer(serializers.ModelSerializer):
 
@@ -193,12 +206,18 @@ class PersonTagSerializer(serializers.ModelSerializer):
         ]
 
 class RoleChangeRequestSerializer(serializers.ModelSerializer):
+    user_name= serializers.CharField(source = "user_id.person_name", read_only = True)
+    email= serializers.EmailField(source = "user_id.email_id", read_only = True)
+    target_role_name = serializers.CharField(source = "target_role_id.role_name", read_only = True)
     class Meta:
         model = RoleChangeRequest
         fields = [
             "request_id",
             "user_id",
+            "user_name",
+            "email",
             "target_role_id",
+            "target_role_name",
             "event_id",
             "reason",
             "status",
@@ -226,3 +245,8 @@ class AdminPeopleSerializer(serializers.ModelSerializer):
         return list(
             obj.userrole_set.select_related("role_id").values_list("role_id__role_name", flat = True)
         )
+    
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ["role_id", "role_name"]

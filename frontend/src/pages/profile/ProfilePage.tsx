@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import ProfileEditComponent from '../../components/profile/ProfileEditComponent';
 import ProfileRoleChangeRequest from '../../components/profile/ProfileRoleChangeRequest';
 import Modal from '../../components/common/Modal';
+import { useNavigate } from 'react-router-dom';
 
 interface userRole {
     id: string;
@@ -16,6 +17,7 @@ export default function ProfilePage() {
     const [userRoles, setUserRoles] = useState<userRole[]>([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isRoleModelOpen, setIsRoleModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async() => {
@@ -33,6 +35,10 @@ export default function ProfilePage() {
 
     const handleBackClick = () => {
         window.history.back();
+    };
+    const handleLogOut = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
     };
 
     return(
@@ -72,6 +78,7 @@ export default function ProfilePage() {
                         ))}
                     </div>
                 </div>
+                <button onClick={() => handleLogOut()} className='bg-red-400 text-white px-4 py-2 rounded-lg'>Logout</button>
             </div>
         </DashboardLayout>
         <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>

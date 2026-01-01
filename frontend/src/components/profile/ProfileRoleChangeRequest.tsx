@@ -8,21 +8,20 @@ interface Role {
     role_id: string;
     role_name: string;
 }
-const ROLES : Role[] = [
-    { role_id : "USER", role_name: "User"},
-    { role_id : "PHOTOGRAPHER", role_name: "Photographer"},
-    { role_id : "EVENT_MANAGER", role_name: "Event Manager"},
-]
 export default function ProfileRoleChangeRequest({onClose}: {onClose: () => void}) {
     const [events, setEvents] = useState<Event[]>([]);
     const [eventId, setEventId] = useState<string>('');
     const [roleId, setRoleId] = useState<string>('');
     const [reason, setReason] = useState<string>('');
     const [message, setMessage] = useState<string>('');
+    const [roles, setRoles] = useState<Role[]>([]);
 
     useEffect(() => {
         api.get('/events/').then(res => {
             setEvents(res.data);
+        });
+        api.get('/roles/').then(res => {
+            setRoles(res.data);
         });
     }, []);
 
@@ -33,8 +32,8 @@ export default function ProfileRoleChangeRequest({onClose}: {onClose: () => void
             return;
         }
         try{
-            await api.post('/role-requests/', {
-                event_id: eventId,
+            await api.post('/role-requests', {
+                event_id: eventId || null,
                 target_role_id: roleId,
                 reason,
             });
@@ -63,7 +62,7 @@ export default function ProfileRoleChangeRequest({onClose}: {onClose: () => void
             </select>
             <select onChange={(e) => setRoleId(e.target.value)} className='border p-2 rounded'>
                 <option value="">Select Role</option>
-                {ROLES.map((r) => (
+                {roles.map((r) => (
                     <option key={r.role_id} value={r.role_id}>{r.role_name}</option>
                 ))} 
             </select>

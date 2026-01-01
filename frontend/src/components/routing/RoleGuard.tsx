@@ -21,9 +21,10 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     if (!user){
         return <Navigate to="/login" replace />
     }
+    console.log("USER ROLES: ", user.roles);
     const roles: Role[] = user.roles || [];
     const hasPermission = roles.some(role => {
-        allowedRoles.includes(role.role_name);
+        return allowedRoles.includes(role.role_name);
     });
 
     if (!hasPermission){

@@ -29,7 +29,8 @@ from .views import (
     PhotoBatchDelete,
     AlbumBatchDelete,
     EventBatchDelete,
-    PeopleBatchDeactivate
+    PeopleBatchDeactivate,
+    RoleListView
 )
 
 urlpatterns =[
@@ -47,20 +48,22 @@ urlpatterns =[
     path("photos/<uuid:photo_id>/download/", DownloadPhoto.as_view(), name="photo-download"),   
     path("albums/<uuid:album_id>/photos/", AlbumPhotoManage.as_view(), name="album-manage"),
     path("tags/person/", CreatePersonTag.as_view(), name="create-person-tag"),
-    path("role-requests/", RoleChangeRequestCreate.as_view(), name="role-request-create"),
-    path("role-requests/admin", RoleChangeRequestList.as_view(), name="role-request-list"),
-    path("role-requests/<uuid:role_request_id>/review", RoleChangeRequestReview.as_view(), name="role-request-review"),
+    path("role-requests", RoleChangeRequestCreate.as_view(), name="role-request-create"),
+    path("role-requests/admin/", RoleChangeRequestList.as_view(), name="role-request-list"),
+    path("role-requests/<uuid:role_request_id>/review/", RoleChangeRequestReview.as_view(), name="role-request-review"),
     path("photos/upload", PhotoUpload.as_view(), name="photo-upload"),
     path("photos/<uuid:photo_id>/metadata-extraction", PhotoMetaDataExtractionView.as_view(), name="photo-metadata-extraction"),
     path("my/favourite", MyFavourite.as_view(), name="my-favourite"),
     path("my/albums", MyAlbumView.as_view(), name="my-albums"),
     path("my/tags", MyTaggedView.as_view(), name="my-tags"),
     path("admin/assign-role", AdminAssignRole.as_view(), name="admin-assign-role"),
+    path("admin/assign-role/", AdminAssignRole.as_view(), name="admin-assign-role"),
     path("photos/search", PhotoSearch.as_view(), name="photo-search"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
-    path("admin/people", AdminPeople.as_view(), name="admin-people"),
+    path("admin/people/", AdminPeople.as_view(), name="admin-people"),
     path("photos/batch-delete", PhotoBatchDelete.as_view(), name="photo-batch-delete"),
     path("albums/batch-delete", AlbumBatchDelete.as_view(), name="album-batch-delete"),
     path("events/batch-delete", EventBatchDelete.as_view(), name="event-batch-delete"),
     path("people/batch-deactivate", PeopleBatchDeactivate.as_view(), name="people-batch-deactivate"),
+    path("roles/", RoleListView.as_view(), name="role-list")
 ]
