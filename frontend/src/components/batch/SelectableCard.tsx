@@ -15,7 +15,7 @@ export default function SelectableCard({id, onClick, children, disabled = false}
         if (selectionMode && !disabled) toggle(id);
         else onClick();
     };
-    const handleCheckBoxClick = (e:React.MouseEvent) => {
+    const handleCheckBoxClick = (e:React.ChangeEvent<HTMLInputElement>) => {
         e.stopPropagation();
         if (!disabled)  toggle(id);
     }
@@ -23,7 +23,7 @@ export default function SelectableCard({id, onClick, children, disabled = false}
     return (
         <div onClick={handleClick} className={`relative cursor-pointer ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
             {selectionMode && (
-                <input type = "checkbox" checked={isSelected} onClick={handleCheckBoxClick} className="absolute top-2 left-2 z-10" />
+                <input type = "checkbox" checked={isSelected} onChange={handleCheckBoxClick} className="absolute top-2 left-2 z-10" />
             )}
             {children}
         </div>

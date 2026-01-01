@@ -229,7 +229,10 @@ class EventListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated, IsEventManagerOrAdmin]
+        return[
+            permissions.IsAuthenticated(),
+            IsEventManagerOrAdmin()
+            ]
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -242,7 +245,10 @@ class AlbumListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
-        return[permissions.IsAuthenticated, IsPhotographerOrAdmin]
+        return[
+            permissions.IsAuthenticated(),
+            IsPhotographerOrAdmin()
+            ]
     
     def get_queryset(self):
         qs= super().get_queryset()
@@ -708,33 +714,37 @@ class AdminPeople(APIView):
 
 class PhotoBatchDelete(APIView):
     permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
-        ids = request.data.get("photo_ids", [])
+        ids = request.data.get("ids", [])
         Photo.objects.filter(photo_id__in = ids).delete()
         return Response({"message": "Photos deleted successfully"}, status=status.HTTP_200_OK)
     
 class AlbumBatchDelete(APIView):
     permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
-        ids = request.data.get("album_ids", [])
+        ids = request.data.get("ids", [])
         Album.objects.filter(album_id__in = ids).delete()
         return Response({"message": "Albums deleted successfully"}, status=status.HTTP_200_OK)
     
 class EventBatchDelete(APIView):
     permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
-        ids = request.data.get("event_ids", [])
+        ids = request.data.get("ids", [])
         Events.objects.filter(event_id__in = ids).delete()
         return Response({"message": "Events deleted successfully"}, status=status.HTTP_200_OK)
     
 class PeopleBatchDeactivate(APIView):
     permission_classes= [permissions.IsAuthenticated, IsAdmin]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
-        ids = request.data.get("person_ids", [])
+        ids = request.data.get("ids", [])
         Person.objects.filter(person_id__in = ids).update(is_active = False)
         return Response({"message": "People deactivated successfully"}, status=status.HTTP_200_OK)
     
