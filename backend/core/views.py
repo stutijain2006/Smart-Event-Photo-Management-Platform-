@@ -601,11 +601,15 @@ class MyTaggedView(APIView):
         events= []
         for tag in tags:
             if tag.photo_id:
-                photos.append(tag.photo_id.photo_id)
+                photos.append(tag.photo_id)
             elif tag.album_id:
-                albums.append(tag.album_id.album_id)
+                albums.append(tag.album_id)
             elif tag.event_id:
-                events.append(tag.event_id.event_id)
+                events.append(tag.event_id)
+
+        albums = list(set(albums))
+        photos = list(set(photos))
+        events = list(set(events))
         return Response({
             "photos": PhotoSerializer(photos, many=True).data,
             "albums": AlbumSerializer(albums, many=True).data,

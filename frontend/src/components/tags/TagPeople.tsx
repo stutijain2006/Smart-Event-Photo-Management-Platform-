@@ -17,7 +17,7 @@ export default function TagPeople({type, objectId, onClose}: Props){
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        api.get("/admin/people").then(res => setPeople(res.data));
+        api.get("/admin/people/").then(res => setPeople(res.data));
     }, []);
     
     const tagPerson = async (userId : string) => {

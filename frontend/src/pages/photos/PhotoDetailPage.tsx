@@ -31,7 +31,7 @@ export default function PhotoDetailPage(){
         const found = photos.data.find((p: any) => p.photo_id === photoId);
         setPhoto(found || null);
 
-        const c = await api.get(`/photos/${photoId}/comments`);
+        const c = await api.get(`/photos/${photoId}/comments/`);
         setComments(c.data);
     };
 

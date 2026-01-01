@@ -34,7 +34,7 @@ export default function DashboardLayout({children}: {children: React.ReactNode})
     return (
         <div className="flex flex-col min-h-screen">
             <Topbar />
-            <main className="flex flex-col flex-1 items-center justify-center p-4">
+            <main className="flex flex-col flex-1 items-center justify-center p-4 flex-wrap">
                 {children}
             </main>
             <Footer />
