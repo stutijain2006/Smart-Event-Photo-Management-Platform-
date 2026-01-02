@@ -36,7 +36,7 @@ class PersonSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name")
-    roles = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
     class Meta:
         model = Events
         fields = [
@@ -50,18 +50,21 @@ class EventSerializer(serializers.ModelSerializer):
             "created_by",
             "event_url",
             "event_qr_code",
-            "roles" 
+            "members" 
         ]
     
-    def get_roles(self, obj):
-        return list(
-            UserRole.objects.filter(event_id = obj).
-            select_related("user_id", "role_id").values(
-                user_uuid = F("user_id__user_id"),
-                person_name = F("user_id__person_name"),
-                role_name = F("role_id__role_name")
-            )
+    def get_members(self, obj):
+        user_roles = (
+            UserRole.objects.filter(event_id = obj).select_related("user_id", "role_id")
         )
+        return [
+            {
+                "user_id":ur.user_id.user_id,
+                "user_name":ur.user_id.person_name,
+                "role_name":ur.role_id.role_name
+            }
+            for ur in user_roles
+        ]
 
 class AlbumSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name")
@@ -215,6 +218,7 @@ class PersonTagSerializer(serializers.ModelSerializer):
 class RoleChangeRequestSerializer(serializers.ModelSerializer):
     user_name= serializers.CharField(source = "user_id.person_name", read_only = True)
     email= serializers.EmailField(source = "user_id.email_id", read_only = True)
+    event_name = serializers.CharField(source="event_id.event_name", read_only = True)
     target_role_name = serializers.CharField(source = "target_role_id.role_name", read_only = True)
     class Meta:
         model = RoleChangeRequest
@@ -223,6 +227,7 @@ class RoleChangeRequestSerializer(serializers.ModelSerializer):
             "user_id",
             "user_name",
             "email",
+            "event_name",
             "target_role_id",
             "target_role_name",
             "event_id",

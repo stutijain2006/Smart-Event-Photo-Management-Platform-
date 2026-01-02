@@ -44,9 +44,9 @@ export default function AdminPeoplePage() {
             
             <Section title="Events">
                 {events.map(event => (
-                    <div key={event.event_id} className='flex items-center justify-center bg-gray-300 rounded-lg shadow'>
-                        <div className='flex flex-col items-center justify-center'>
-                            <div className='font-bold'>{event.name}</div>
+                    <div key={event.event_id} className='bg-gray-300 rounded-lg shadow'>
+                        <div className='flex items-center justify-between'>
+                            <div className='font-bold'>{event.event_name}</div>
                             <button className='text-blue-600' onClick={() => {
                                 setExpandedEventId(expandedEventId === event.event_id ? null : event.event_id);
                             }} >
@@ -56,15 +56,15 @@ export default function AdminPeoplePage() {
 
                         {expandedEventId === event.event_id && (
                             <div className='mt-3 space-y-2'>
-                                {event.roles?.length ?(
-                                    event.roles.map((r: any) => (
-                                        <div key={r.user_id} className='flex justify-around flex-col items-center bg-white p-2 rounded '>
-                                            <span>{r.user_name} - {" "} <span className='text-gray-600'>{r.role_name}</span></span>
+                                {event.members?.length ?(
+                                    event.members?.map((m: any) => (
+                                        <div key={m.user_id} className='flex justify-around flex-col items-center bg-white p-2 rounded '>
+                                            <span>{m.user_name} - {" "} <span className='text-gray-600'>{m.role_name}</span></span>
                                             <button className='text-blue-600' onClick={() => {
                                                 setSelectedPerson({
-                                                    user_id: r.user_id,
-                                                    person_name: r.user_name,
-                                                    current_role: r.role_name,
+                                                    user_id: m.user_id,
+                                                    person_name: m.user_name,
+                                                    current_role: m.role_name,
                                                     event_id : event.event_id,
                                                     event_name: event.name
                                                 });
@@ -87,7 +87,7 @@ export default function AdminPeoplePage() {
                 {filteredPeople.map(p => (
                     <div key={p.user_id} className='grid grid-cols-3 bg-white p-3 rounded-lg shadow gap-4 w-[25vw] '>
                         <div className='font-bold'>{p.name}</div>
-                        <div className='text-[0.8rem] text-gray-600'>{p.email_id}</div>
+                        <div className='text-[0.8rem] text-gray-600'>{p.email}</div>
                         <button className='text-blue-600' onClick={() => {
                             setSelectedPerson({
                                 user_id: p.user_id,
@@ -102,7 +102,9 @@ export default function AdminPeoplePage() {
             <Section title="Pending Requests">
                 {requests.map(r => (
                     <div key={r.request_id} className='grid grid-cols-4 bg-white p-3 rounded-lg shadow'>
-                        <div className='font-bold'>{r.user_id}</div>
+                        <div className='font-bold'>{r.user_name}</div>
+                        <div className='font-semibold'>{r.event_name}</div>
+                        <div className='text-gray-600'>{r.target_role_name}</div>
                         <div className='text-[0.8rem] text-gray-600'>{r.status}</div>
                         <div className='text-[0.8rem] text-gray-600'>{r.reason}</div>
                         <div className='flex gap-2'>

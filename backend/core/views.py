@@ -431,13 +431,14 @@ class RoleChangeRequestList(generics.ListAPIView):
 
 class RoleChangeRequestReview(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
-    def post(self, request, request_id):
+    def post(self, request, role_request_id):
         action = request.data.get("status")
         action = action.strip().lower()
         if action not in ("reject", "approve"):
             return Response({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
-        role_request = get_object_or_404(RoleChangeRequest, request_id=request_id)
+        role_request = get_object_or_404(RoleChangeRequest, request_id=role_request_id)
         if action == "approve":
             with transaction.atomic():
                 UserRole.objects.get_or_create(
@@ -625,16 +626,17 @@ class MyAlbumView(APIView):
 
 class AdminAssignRole(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
         print("HIT", request.path)
         user_id = request.data.get("user_id")
-        role_name = request.data.get("role_name")
+        role_id = request.data.get("role_id")
         event_id = request.data.get("event_id")
-        if not user_id or not role_name :
+        if not user_id or not role_id :
             return Response({"message": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
         user = get_object_or_404(Person, user_id=user_id)
-        role = get_object_or_404(Role, role_name=role_name)
+        role = get_object_or_404(Role, role_id = role_id)
         event = None
         if event_id :
             event = get_object_or_404(Events, event_id=event_id)

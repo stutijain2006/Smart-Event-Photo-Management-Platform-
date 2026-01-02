@@ -10,10 +10,22 @@ import { canManageSpecificEvents} from '../../utils/permission/permissions';
 import NewEvent from '../../components/events/NewEvent';
 
 export default function EventsPage() {
-    const [events, setEvents] = useState([]);
+    return(
+        <BatchProvider>
+            <EventContent />
+        </BatchProvider>
+    );
+}
+
+function EventContent(){
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
+    const [createdEvents, setCreatedEvents] = useState<any[]>([]);
+    const [taggedEvents, setTaggedEvents] = useState<any[]>([]);
+    const [otherEvents, setOtherEvents] = useState<any[]>([]);
+    const [search, setSearch] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const {selectionMode, setSelectionMode} = useBatch();
     console.log("USER FROM API:", user);
     
     
@@ -21,59 +33,77 @@ export default function EventsPage() {
     console.log("CAN MANAGE:", canManage);
 
     useEffect(() => {
-        api.get("/events/").then(response => {
-            setEvents(response.data);
-        }).catch(error => {
-            console.error("Error fetching events:", error);
-        });
+        loadEvents();
     }, []);
 
+    const loadEvents = async() => {
+        const [eventsRes, taggedRes] = await Promise.all([
+            api.get('/events/'),
+            api.get('/my/tags')
+        ]);
 
-    return(
-        <BatchProvider>
-            <EventsContent
-                events={events}
-                canManage={canManage}
-                onNavigate={navigate}
-                onCreateEvent={() => setShowCreateModal(true)}
-            />
-            <NewEvent isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={() => {
-                api.get('/events/').then(res => setEvents(res.data));
-            }} />
-        </BatchProvider>
-    );
-}
+        const allEvents = eventsRes.data;
+        const tagged = taggedRes.data.events || [];
 
-function EventsContent({ events, canManage, onNavigate, onCreateEvent} : {
-    events: any[];
-    canManage : boolean;
-    onNavigate: (path: string) => void;
-    onCreateEvent: () => void
-}) {
-    const { selectionMode, setSelectionMode } = useBatch();
+        const created = allEvents.filter(
+            (event: any) => event.created_by === user?.person_name
+        );
+
+        const other = allEvents.filter(
+            (e:any) => 
+                !created.some((c:any) => c.event_id === e.event_id) &&
+                !tagged.some((t:any) => t.event_id === e.event_id)
+            
+        );
+
+        setCreatedEvents(created);
+        setTaggedEvents(tagged);
+        setOtherEvents(other);
+    };
+
+    const filterBySearch = (events: any[]) => {
+       return events.filter(e => e.event_name.toLowerCase().includes(search.toLowerCase()));
+    };
 
     return(
         <DashboardLayout>
-            <BatchToolbar type="event" canManage={canManage} />
-            <div className='flex justify-around items-center'>
-                <button onClick={() => onNavigate("/")} className='text-[1.2rem] font-semibold'>←</button>
+            {selectionMode && (
+                <BatchToolbar type="event" canManage={canManage} />
+            )}
+            <div className='flex justify-around items-center mb-6'>
+                <button onClick={() => navigate("/")} className='text-[1.2rem] font-semibold'>←</button>
                 <div className='text-[1.3rem] font-bold mb-4 p-4'>My Events</div>
-
-                <div className='flex gap-4'>
-
                     {canManage && 
-                    <>
-                    <button className='px-4 py-2 border rounded-lg' onClick= {() => setSelectionMode(!selectionMode)}>
-                        {selectionMode ? "Cancel" : "Select"}
-                    </button>
+                        <div className='flex gap-4'>
+                            <button className='px-4 py-2 border rounded-lg' onClick= {() => setSelectionMode(!selectionMode)}>
+                                {selectionMode ? "Cancel" : "Select"}
+                            </button>
 
-                    <button onClick={onCreateEvent} className='px-4 py-2 bg-gray-300 rounded-lg '>
-                        + New Event
-                    </button>
-                    </>
+                            <button onClick={() => setShowCreateModal(true)} className='px-4 py-2 bg-gray-300 rounded-lg '>
+                                    + New Event
+                            </button>
+                        </div>
                     }
-                </div>
             </div>
+            <input placeholder='Search Events ...' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-full mb-3' />
+            <EventSection title = "Events Created by You" events={filterBySearch(createdEvents)} onNavigate={navigate} />
+            <EventSection title = "Events You are Tagged In" events={filterBySearch(taggedEvents)} onNavigate={navigate} />
+            <EventSection title = "Other Accessible Events" events={filterBySearch(otherEvents)} onNavigate={navigate} />
+            <NewEvent isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={loadEvents} />
+        </DashboardLayout>
+    )
+}
+
+function EventSection({ title, events, onNavigate} : {
+    title: string;
+    events: any[];
+    onNavigate: (path: string) => void;
+}) {
+    if (events.length === 0) return null;
+    return(
+        
+        <div className='mb-8'>
+            <h3 className='text-[1.2rem] font-semibold mb-3'>{title}</h3>
             <div className='grid grid-cols-2 gap-4'>
                 {events.map((event: any) => (
                     <SelectableCard 
@@ -88,6 +118,6 @@ function EventsContent({ events, canManage, onNavigate, onCreateEvent} : {
                     </SelectableCard>
                 ))}
             </div>
-        </DashboardLayout>
+        </div>
     );
 }
