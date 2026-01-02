@@ -230,6 +230,12 @@ class RoleChangeRequestSerializer(serializers.ModelSerializer):
             "status",
             "created_at"
         ]
+        read_only_fields = [
+            "request_id",
+            "user_id",
+            "status",
+            "created_at"
+        ]
 
 class AlbumAddPhotoSerializer(serializers.Serializer):
     photo_id = serializers.UUIDField()
