@@ -35,7 +35,8 @@ from .serializers import (
     RoleChangeRequestSerializer,
     AdminPeopleSerializer,
     PhotoMetaDataSerializer,
-    MeSerializer
+    MeSerializer,
+    RoleSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -734,4 +735,4 @@ class PeopleBatchDeactivate(APIView):
     
 class RoleListView(generics.ListAPIView):
     queryset= Role.objects.all()
-    serializer_class = MeSerializer
+    serializer_class = RoleSerializer

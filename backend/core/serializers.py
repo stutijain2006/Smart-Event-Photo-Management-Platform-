@@ -262,10 +262,10 @@ class MeSerializer(serializers.ModelSerializer):
             "user_id",
             "email_id",
             "person_name",
-            "roles",
             "short_bio",
             "profile_picture",
             "batch",
+            "roles",
             "department",
             "is_email_verified"
         ]
@@ -276,11 +276,19 @@ class MeSerializer(serializers.ModelSerializer):
         return None
     
     def get_roles(self, obj):
-        roles = UserRole.objects.filter(user_id = obj).select_related('role_id', 'event_id')
-        return[
+        roles = UserRole.objects.filter(user_id = obj)
+        return [
             {
                 "role_name": r.role_id.role_name,
                 "event_name": str(r.event_id_id) if r.event_id else None
             }
             for r in roles
+        ]
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = [
+            "role_id",
+            "role_name"
         ]
