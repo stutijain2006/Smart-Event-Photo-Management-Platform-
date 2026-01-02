@@ -3,12 +3,15 @@ import {useNavigate} from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import AppLogo from '../../assets/logo.png';
 
+const BACKEND_URL = "http:// 127.0.0.1:8000";
+
 export default function TopBar() {
     const navigate = useNavigate();
     const { user }= useAppSelector((state) => state.auth);
     const isAdmin = user?.roles?.some(
         (r:any) => r.role_name === 'ADMIN'
     )
+    const profilePicture = user?.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : 'https://via.placeholder.com/40';
 
     return (
         <div className="flex items-center justify-between p-4 bg-[#f5f5f5] shadow-md">
@@ -20,9 +23,9 @@ export default function TopBar() {
                 {isAdmin && (
                     <div className='text-[1rem] font-semibold' onClick= {() => navigate("/admin/people")} >People</div>
                 )}
-                <div className='text-[1rem] font-semibold'>
-                    <img src={user?.profile_picture || 'https://via.placeholder.com/40'} alt="Profile" className="w-[6vw] h-auto rounded-full cursor-pointer" onClick={() => navigate('/profile')} /> 
-                </div>
+                {user && (
+                    <img src={profilePicture} alt="Profile" className="w-[6vw] h-auto rounded-full cursor-pointer" onClick={() => navigate('/profile')} /> 
+                )}
             </div>
         </div>
     );
