@@ -19,7 +19,7 @@ export default function AdminPeoplePage() {
 
     const loadData = async() => {
         const [peopleRes, reqRes, eventRes] = await Promise.all([
-            api.get('/admin/people/'),
+            api.get('/admin/people/list/'),
             api.get('/role-requests/admin/'),
             api.get('/events/')
         ]);
@@ -86,8 +86,8 @@ export default function AdminPeoplePage() {
             <Section title="People List">
                 {filteredPeople.map(p => (
                     <div key={p.user_id} className='grid grid-cols-3 bg-white p-3 rounded-lg shadow gap-4 w-[25vw] '>
-                        <div className='font-bold'>{p.name}</div>
-                        <div className='text-[0.8rem] text-gray-600'>{p.email}</div>
+                        <div className='font-bold'>{p.person_name}</div>
+                        <div className='text-[0.8rem] text-gray-600'>{p.email_id}</div>
                         <button className='text-blue-600' onClick={() => {
                             setSelectedPerson({
                                 user_id: p.user_id,

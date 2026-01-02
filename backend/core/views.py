@@ -755,3 +755,30 @@ class PeopleBatchDeactivate(APIView):
 class RoleListView(generics.ListAPIView):
     queryset= Role.objects.all()
     serializer_class = RoleSerializer
+
+
+class AdminPeopleList(APIView):
+    permission_classes= [permissions.IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        users = Person.objects.all().prefetch_related(
+            "userrole_set__event_id", "userrole_set__role_id"
+        )
+        data = []
+        for user in users:
+            roles = [
+                {
+                    "role_name": ur.role_id.role_name,
+                    "event_name": str(ur.event_id_id) if ur.event_id else None
+                }
+                for ur in user.userrole_set.all()
+            ]
+
+            data.append({
+                "user_id": user.user_id,
+                "person_name": user.person_name,
+                "email_id": user.email_id,
+                "roles": roles
+            })
+
+        return Response(data)

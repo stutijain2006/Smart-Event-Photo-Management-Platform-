@@ -13,11 +13,11 @@ interface Props{
     onClose : () => void
 }
 export default function TagPeople({type, objectId, onClose}: Props){
-    const [people, setPeople] = useState<Person[]>([]);
+    const [people, setPeople] = useState<any[]>([]);
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        api.get("/admin/people/").then(res => setPeople(res.data));
+        api.get("/admin/people/list/").then(res => setPeople(res.data));
     }, []);
     
     const tagPerson = async (userId : string) => {
@@ -30,7 +30,7 @@ export default function TagPeople({type, objectId, onClose}: Props){
     };
 
     const filtered = people.filter(p => {
-        return p.name.toLowerCase().includes(search.toLowerCase()) || p.email.toLowerCase().includes(search.toLowerCase());
+        return p.person_name.toLowerCase().includes(search.toLowerCase()) || p.email_id.toLowerCase().includes(search.toLowerCase());
     });
 
     return(
@@ -42,8 +42,8 @@ export default function TagPeople({type, objectId, onClose}: Props){
                 {filtered.map(p => (
                     <div key={p.user_id} className='flex justify-between p-2 border-b'>
                         <div>
-                            <div className='font-semibold text-[1rem]'>{p.name}</div>
-                            <div className='text-[0.7rem]'>{p.email}</div>
+                            <div className='font-semibold text-[1rem]'>{p.person_name}</div>
+                            <div className='text-[0.7rem]'>{p.email_id}</div>
                         </div>
                         <button className='text-[1rem] font-semibold' onClick={() => tagPerson(p.user_id)}>Tag</button>
                     </div>
