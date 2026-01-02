@@ -44,7 +44,6 @@ export default function ProfileRoleChangeRequest({onClose}: {onClose: () => void
         }
     };
 
-    
 
     return(
         <div className='flex flex-col gap-4 p-4 w-[60vw]'>

@@ -414,7 +414,6 @@ class CreatePersonTag(APIView):
     
     
 class RoleChangeRequestCreate(generics.CreateAPIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     queryset = RoleChangeRequest.objects.all()
     serializer_class = RoleChangeRequestSerializer
@@ -625,7 +624,6 @@ class MyAlbumView(APIView):
     
 
 class AdminAssignRole(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
     def post(self, request):
@@ -691,15 +689,34 @@ class MeView(APIView):
 
 
 class AdminPeople(APIView):
-    permission_classes= [permissions.IsAuthenticated, IsAdmin] 
+    permission_classes= [
+        permissions.IsAuthenticated,
+        IsAdmin] 
     def get(self, request): 
-        people = Person.objects.all().order_by("person_name")
-        serializer = AdminPeopleSerializer(people, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        events= Events.objects.all()
+        response = []
+        for event in events:
+            user_roles = UserRole.objects.filter(event_id = event).select_related(
+                "user_id", "role_id"
+            )
+            roles_data = [
+                {
+                    "user_id": ur.user_id.user_id,
+                    "user_name": ur.user_id.person_name,
+                    "role_name":ur.role_id.role_name
+                }
+                for ur in user_roles
+            ]
+            response.append({
+                "event_id": event.event_id,
+                "name": event.event_name,
+                "roles": roles_data
+            })
+        return Response(response)
 
 class PhotoBatchDelete(APIView):
     permission_classes= [permissions.IsAuthenticated, IsPhotographerOrAdmin]
-    authentication_classes = [CsrfExemptSessionAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication]  
 
     def post(self, request):
         ids = request.data.get("ids", [])

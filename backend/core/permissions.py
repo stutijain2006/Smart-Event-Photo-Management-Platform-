@@ -13,9 +13,9 @@ def user_has_role(user, role_name : str , event = None) -> bool:
         return False
     if user.is_superuser:
         return True
-    qs = UserRole.objects.filter(user_id = user, role_id__name = role_name)
+    qs = UserRole.objects.filter(user_id = user, role_id__role_name = role_name)
     if event:
-        qs = qs.filter(event = event)
+        qs = qs.filter(event_id = event)
     return qs.exists()
 
 def is_admin(user) -> bool:
@@ -55,7 +55,14 @@ class IsNotUser(BasePermission):
     
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
-        return(
-            request.user and request.user.is_authenticated and user_has_role(request.user, ROLE_ADMIN)
-        )   
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        if request.user.is_superuser:
+            return True
+
+        if request.method in SAFE_METHODS:
+            return True
+
+        return user_has_role(request.user, ROLE_ADMIN)  
     
