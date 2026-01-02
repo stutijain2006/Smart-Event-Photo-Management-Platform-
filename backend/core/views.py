@@ -336,7 +336,9 @@ class DownloadPhoto(APIView):
             photo_id=photo,
             user_id= user,
             variant=variant
-        )     
+        )    
+        photo.download_count += 1
+        photo.save(update_fields=["download_count"]) 
         return Response({
             "file_url": file_field.url
         }, status=status.HTTP_200_OK)

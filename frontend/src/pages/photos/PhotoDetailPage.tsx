@@ -46,13 +46,23 @@ export default function PhotoDetailPage(){
         });
     }
 
-    const downloadPhoto = async(variant: string) => {
-        const res = await api.post(`/photos/${photoId}/download/`, {variant}, {responseType: "blob"});
-        const blob = new Blob([res.data]);
-        const link = document.createElement("a");
-        link.href= window.URL.createObjectURL(blob);
-        link.download = `${photoId}-${variant}.jpg`;
-        link.click();
+    const downloadPhoto = async(variant: "original" | "watermarked" | "compressed") => {
+        const res = await api.post(`/photos/${photoId}/download/`, {variant});
+        const fileUrl = res.data.file_url;
+        const fileResponse = await fetch(fileUrl, {
+            credentials: "include",
+        })
+        const blob = await fileResponse.blob();
+        const file = new Blob([blob], {type: "image/jpeg"});
+
+        const url = window.URL.createObjectURL(file);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${photoId}-${variant}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
     };
 
     if (!photo) return (<div>Loading...</div>);

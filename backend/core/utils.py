@@ -62,28 +62,55 @@ def omniport_revoke_token(token: str, token_type_hint : str = "access_token") ->
 
 def generate_variants(photo):
     original_path = photo.file_original.path
-    img = Image.open(original_path)
-    compressed_path = original_path.replace("original", "compressed")
-    os.makedirs(os.path.dirname(compressed_path), exist_ok=True)
+    base_dir = os.path.dirname(original_path)
+    filename= os.path.splitext(os.path.basename(original_path))[0]
+    
+    compressed_dir = base_dir.replace("photos/original", "photos/compressed")
+    os.makedirs(compressed_dir, exist_ok=True)
+    compressed_path = os.path.join(compressed_dir, f"{filename}.jpg")
 
-    img.save(compressed_path, optimize=True, quality=50)
+    with Image.open(original_path) as img:
+        img.convert("RGB").save(
+            compressed_path,
+            format="JPEG",
+            optimize=True,
+            quality=40,
+            progressive=True
+        )
     photo.file_compressed.save(
-        os.path.basename(compressed_path), File(open(compressed_path, "rb"))
+        f"{filename}.jpg",
+        File(open(compressed_path, "rb")),
+        save=False
     )
 
-    watermark_path = os.path.join(settings.BASE_DIR, "static", "watermark.png")
-    if not os.path.exists(watermark_path):
+    watermark_logo_path = os.path.join(settings.BASE_DIR, "static", "watermark.png")
+    if not os.path.exists(watermark_logo_path):
         raise FileNotFoundError("Watermark not found")
-    
-    watermark = Image.open(watermark_path).convert("RGBA")
-    img = img.convert("RGBA")
-    img.paste(watermark, (10,10), watermark)
 
-    watermarked_path = original_path.replace("original", "watermarked")
-    os.makedirs(os.path.dirname(watermarked_path), exist_ok=True)
-    img.save(watermarked_path)
+    watermarked_dir = base_dir.replace("photos/original", "photos/watermarked")
+    os.makedirs(watermarked_dir, exist_ok=True)
+    watermarked_path = os.path.join(watermarked_dir, f"{filename}.jpg")
+
+    with Image.open(original_path) as img:
+        base = img.convert("RGBA").copy()
+        with Image.open(watermark_logo_path).convert("RGBA") as watermark:
+            watermark = watermark.resize(
+                (int(base.width * 0.2), int(base.height * 0.2))
+            )
+
+            x = base.width - watermark.width - 20
+            y = base.height - watermark.height - 20
+            base.paste(watermark, (x, y), watermark)
+
+            base.convert("RGB").save(watermarked_path, format="JPEG")
 
     photo.file_watermarked.save(
-        os.path.basename(watermarked_path), File(open(watermarked_path, "rb"))
+        f"{filename}.jpg",
+        File(open(watermarked_path, "rb")),
+        save=False
     )
+
     photo.save()
+
+
+        
