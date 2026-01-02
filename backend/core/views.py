@@ -501,10 +501,9 @@ def get_exif(img: Image.Image) -> dict:
     return exif
 
 def extract_and_save_metadata(photo: Photo):
-    image_path = photo.file_original
-    if not image_path:
+    if not photo.file_original:
         raise Exception("Image not found")
-    full_path = os.path.join(settings.MEDIA_ROOT, image_path.lstrip("/"))
+    full_path = photo.file_original.path
     if not os.path.exists(full_path):
         raise Exception("Image not found")
     exif = Image.open(full_path)
