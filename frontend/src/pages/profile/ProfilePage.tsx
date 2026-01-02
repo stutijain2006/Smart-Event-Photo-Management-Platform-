@@ -50,7 +50,7 @@ export default function ProfilePage() {
                     <div className='text-[1.3rem] font-bold'>Profile</div>
                 </div>
                 <div className='w-[80vw] flex items-start justify-center px-4 my-8'>
-                    <div className='w-[30vw] h-[40vh] object-contain'><img src={user.profilePicture || "https://via.placeholder.com/150"} alt="Profile Picture" /></div>
+                    <div className='w-[30vw] h-[40vh] object-contain'><img src={user.profile_picture || "https://via.placeholder.com/150"} alt="Profile Picture" /></div>
                     <div className='flex flex-col items-start justify-center gap-4'>
                         <div className='text-[1.2rem] font-semibold'>{user.person_name}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.email_id}</div>
@@ -78,8 +78,8 @@ export default function ProfilePage() {
                         ))}
                     </div>
                 </div>
-                <button onClick={() => handleLogOut()} className='bg-red-400 text-white px-4 py-2 rounded-lg'>Logout</button>
             </div>
+            <button onClick={handleLogOut} className='fixd bottom -6 left-6 px-5 py-2 bg-red-400 text-white shadow z-50 rounded-lg'>Logout</button>
         </DashboardLayout>
         <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
             <ProfileEditComponent user={user} />

@@ -57,6 +57,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
