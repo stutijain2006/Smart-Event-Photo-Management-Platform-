@@ -61,7 +61,7 @@ export default function AlbumPage(){
                     <AlbumCard album={{
                         album_name: "Liked Photos",
                         isVirtual: true,
-                        route : "/my/favourite"
+                        route : "/my-favourite"
                     }} />
                 </Section>
 

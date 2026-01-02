@@ -14,6 +14,7 @@ import AlbumsPage from '../pages/albums/AlbumsPage';
 import AlbumDetailPage from '../pages/albums/AlbumDetailPage';
 import PhotoDetailPage from '../pages/photos/PhotoDetailPage';
 import AdminPeoplePage from '../pages/admin/AdminPeoplePage';
+import MyFavourite from '../pages/photos/MyFavourite';
 
 export default function AppRoutes() {
     return (
@@ -70,6 +71,12 @@ export default function AppRoutes() {
                     <RoleGuard allowedRoles={['ADMIN']} >
                         <AdminPeoplePage />
                     </RoleGuard>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/my-favourite" element={
+                <ProtectedRoute>
+                    <MyFavourite />
                 </ProtectedRoute>
             } />
 
