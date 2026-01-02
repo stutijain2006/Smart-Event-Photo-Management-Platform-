@@ -629,18 +629,18 @@ class AdminAssignRole(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
 
     def post(self, request):
-        print("HIT", request.path)
+        print("DATA RECEIVED", request.data)
         user_id = request.data.get("user_id")
-        role_id = request.data.get("role_id")
+        role_name= request.data.get("role_name")
         event_id = request.data.get("event_id")
-        if not user_id or not role_id :
+        if not user_id or not role_name :
             return Response({"message": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
         user = get_object_or_404(Person, user_id=user_id)
-        role = get_object_or_404(Role, role_id = role_id)
+        role = get_object_or_404(Role, role_name = role_name)
         event = None
         if event_id :
             event = get_object_or_404(Events, event_id=event_id)
-        UserRole.objects.update_or_create(user_id=user, role_id=role, event_id=event)
+        UserRole.objects.update_or_create(user_id=user, event_id=event, defaults={"role_id": role})
         return Response({"message": "Role assigned successfully"}, status=status.HTTP_200_OK)
 
 class PhotoSearch(generics.ListAPIView):
