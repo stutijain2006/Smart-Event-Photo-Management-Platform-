@@ -84,6 +84,7 @@ class PhotoSerializer(serializers.ModelSerializer):
     file_original = serializers.ImageField(read_only=True)
     file_watermarked = serializers.ImageField(read_only=True)
     file_compressed = serializers.ImageField(read_only=True)
+    photographer_name = serializers.CharField(source = "uploaded_by.person_name", read_only = True)
 
     class Meta:
         model = Photo
@@ -100,7 +101,8 @@ class PhotoSerializer(serializers.ModelSerializer):
             "like_count",
             "view_count",
             "download_count",
-            "created_by"
+            "created_by",
+            "photographer_name"
         ]
 
 class RegisterSerializer(serializers.ModelSerializer):

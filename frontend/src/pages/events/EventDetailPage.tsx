@@ -104,7 +104,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
                             <div className="text-[0.8rem] text-gray-600">
                                 {files.length} file(s) selected
                             </div>
-                            <button className="bg-gray-300 px-4 py-2 w-[60vw] h-[30vh] rounded-lg" onClick={handleBulkUpload}>
+                            <button className="bg-gray-300 px-4 py-2 rounded-lg" onClick={handleBulkUpload}>
                                 Upload Photos
                             </button>
                         </div>  

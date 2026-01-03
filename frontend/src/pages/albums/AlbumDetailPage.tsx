@@ -42,6 +42,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
     const [search, setSearch] = useState("");
     const [showTag, setShowTag] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const MEDIA_BASE = "http://localhost:8000";
     const fetchPhotos = async() => {
         const response = await api.get(`/albums/${albumId}/photos/`);
         setPhotos(response.data);
@@ -65,7 +66,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                     }
                 });
 
-                const uploadPhoto = uploadRes.data;
+                const uploadPhoto = Array.isArray(uploadRes.data) ? uploadRes.data[0] : uploadRes.data;
                 if (!uploadPhoto.photo_id){
                     console.error("Upload repsonse missing photo_id: ", uploadPhoto);
                     throw new Error("Upload repsonse missing photo_id");
@@ -84,7 +85,13 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
         }
     }
 
-    const filteredPhotos = photos.filter((photo: any) => photo.photo_id.toLowerCase().includes(search.toLowerCase()));
+    const filteredPhotos = photos.filter((photo: any) => {
+        const q= search.toLowerCase();
+        return(
+            photo.photo_id?.toLowerCase().includes(q) ||
+            photo.photographer_name?.toLowerCase().includes(q)
+        );
+    });
 
     return (
         <DashboardLayout>
@@ -133,7 +140,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                         <SelectableCard key={photo.photo_id} id={photo.photo_id} onClick={() => {
                             if (!selectionMode) navigate(`/photos/${photo.photo_id}`);
                         }} > 
-                            <img src={photo.file_watermarked || photo.file_original} alt="photo" className="w-[10vw] h-[10vh] object-cover" />
+                            <img src={`${MEDIA_BASE}${photo.file_watermarked || photo.file_original}`} alt="photo" className="w-[20vw] h-[25vh] object-cover" />
                         </SelectableCard>    
                     ))}
                     </div>
