@@ -522,17 +522,6 @@ class PhotoUpload(APIView):
                             notif_type = "NEW_PHOTO",
                             object_id = photo.photo_id
                         )   
-                
-                async_to_sync(channel_layer.group_send)(
-                    f"album_{event.event_id}",
-                    {
-                        "type": "send_notifications",
-                        "data": {
-                            "type": "ALBUM_UPDATE",
-                            "photo": PhotoSerializer(photo, context={"request": request}).data
-                        }
-                    }
-                )
         serializer = PhotoSerializer(created_photos, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
