@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.db.models import F
-from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData, Role
+from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData, Role, Notification
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -315,4 +315,16 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = [
             "role_id",
             "role_name"
+        ]
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = [
+            "notification_id",
+            "message",
+            "type",
+            "object_id",
+            "is_read",
+            "created_at"
         ]

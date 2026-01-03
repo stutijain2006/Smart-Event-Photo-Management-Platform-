@@ -218,3 +218,13 @@ class RoleChangeRequest(models.Model):
 
     def __str__(self):
         return f"Role Change Request: {self.user_id} to {self.target_role_id}"
+    
+
+class Notification(models.Model):
+    notification_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="notifications")
+    message = models.TextField()
+    type = models.CharField(max_length=50)
+    object_id = models.UUIDField(null=True, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

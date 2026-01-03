@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,9 +44,20 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "sslserver",
-    "django_extensions"
+    "django_extensions",
+    "channels",
 ]
 
+ASGI_APPLICATION = "backend.asgi.application"
+
+CHANNEL_LAYERS= {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587

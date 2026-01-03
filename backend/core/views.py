@@ -18,7 +18,10 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
 from django.http import FileResponse
 from .utils import generate_variants
-from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState
+from .notifications.utils import send_notification  
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState, Notification
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -36,7 +39,8 @@ from .serializers import (
     AdminPeopleSerializer,
     PhotoMetaDataSerializer,
     MeSerializer,
-    RoleSerializer
+    RoleSerializer,
+    NotificationSerializer
 )
 from .permissions import (  
     IsEventManagerOrAdmin,
@@ -401,18 +405,36 @@ class CreatePersonTag(APIView):
         if tag_type == "photo":
             photo = Photo.objects.get(photo_id=object_id)
             tag_data["photo_id"] = photo
+            send_notification(
+                user = target_user,
+                message = f"You were tagged in a photo",
+                notif_type="TAG_PHOTO",
+                object_id=photo.photo_id
+            )
         elif tag_type == "album":
             album = Album.objects.get(album_id=object_id)
             tag_data["album_id"] = album
+            send_notification(
+                user = target_user,
+                message = f"You were tagged in a album",
+                notif_type="TAG_ALBUM",
+                object_id=album.album_id
+            )
         elif tag_type == "event":
             event = Events.objects.get(event_id=object_id)
             tag_data["event_id"] = event
+            send_notification(
+                user = target_user,
+                message = f"You were tagged in an event",
+                notif_type="TAG_EVENT",
+                object_id=event.event_id
+            )
         else:
             return Response({"message": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
         
         PersonTag.objects.create(**tag_data)
-        
         return Response({"message": "Person tag created successfully"}, status=status.HTTP_200_OK)
+    
     
     
 class RoleChangeRequestCreate(generics.CreateAPIView):
@@ -462,6 +484,7 @@ class PhotoUpload(APIView):
     def post(self, request):
         uploaded_files = request.FILES.getlist('files') or request.FILES.getlist('file')
         print(uploaded_files)
+
         if not uploaded_files:
             return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -470,6 +493,7 @@ class PhotoUpload(APIView):
 
         event = Events.objects.filter(event_id = event_id).first() if event_id else None
         created_photos = []
+        channel_layer = get_channel_layer()
 
         for f in uploaded_files:
             photo = Photo.objects.create(
@@ -486,7 +510,29 @@ class PhotoUpload(APIView):
             except Exception as e:
                 photo.status = "processing"
             photo.save()  
-            created_photos.append(photo)    
+            created_photos.append(photo) 
+
+            if event: 
+                roles = UserRole.objects.filter(event_id = event).select_related("user_id")
+                for r in roles:
+                    if r.user_id != request.user:
+                        send_notification(
+                            user = r.user_id,
+                            message= "New photo uploaded in your event",
+                            notif_type = "NEW_PHOTO",
+                            object_id = photo.photo_id
+                        )   
+                
+                async_to_sync(channel_layer.group_send)(
+                    f"album_{event.event_id}",
+                    {
+                        "type": "send_notifications",
+                        "data": {
+                            "type": "ALBUM_UPDATE",
+                            "photo": PhotoSerializer(photo, context={"request": request}).data
+                        }
+                    }
+                )
         serializer = PhotoSerializer(created_photos, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -783,3 +829,23 @@ class AdminPeopleList(APIView):
             })
 
         return Response(data)
+    
+
+class MyNotifications(APIView):
+    permission_classes= [permissions.IsAuthenticated]
+
+    def get(self, request):
+        qs= Notification.objects.filter(user = request.user).order_by("-created_at")
+        serializer = NotificationSerializer(qs, many=True)
+        return Response(serializer.data)
+    
+class MarkNotificationRead(APIView):
+    permission_classes= [permissions.IsAuthenticated]
+
+    def post(self, request, notification_id):
+        notif= get_object_or_404(
+            Notification, notification_id= notification_id, user= request.user
+        )
+        notif.is_read = True
+        notif.save()
+        return Response({"message": "Notification marked as read successfully"}, status=status.HTTP_200_OK)

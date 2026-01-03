@@ -52,6 +52,24 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
         fetchPhotos();
     }, []);
 
+    useEffect(() => {
+        const socket = new WebSocket("ws://localhost:8000/ws/notifications/");
+        socket.onopen=() => {
+            socket.send(JSON.stringify({
+                action: "JOIN_ALBUM",
+                album_id: albumId
+            }));
+        };
+
+        socket.onmessage=(e) => {
+            const data = JSON.parse(e.data);
+            if ( data.type === "ALBUM_UPDATE"){
+                setPhotos(prev => [data.photo, ...prev]);
+            }
+        };
+        return () => socket.close();
+    }, [albumId]);
+
     const handleFilesSelected = async(files : File[]) => {
         if (!canManage) return;
         setUploading(true);

@@ -6,12 +6,16 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { setUser } from '../../features/auth/authslice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useNotifications } from '../../hooks/useNotifications';
 
 export default function DashboardLayout({children}: {children: React.ReactNode}) {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { user } = useAppSelector((state : any) => state.auth);
-
+    
+    useNotifications((data) => {
+        console.log("Notification: ", data);
+    });
     useEffect(() => {
         if (!user) {
             const fetchUser = async() => {
@@ -30,6 +34,7 @@ export default function DashboardLayout({children}: {children: React.ReactNode})
     if (!user){
         return <div>Loading...</div>;
     }
+
 
     return (
         <div className="flex flex-col min-h-screen">
