@@ -513,15 +513,27 @@ class PhotoUpload(APIView):
             created_photos.append(photo) 
 
             if event: 
+                notified_users = set()
+                if event.created_by != request.user:
+                    notified_users.add(event.created_by)
+
                 roles = UserRole.objects.filter(event_id = event).select_related("user_id")
                 for r in roles:
                     if r.user_id != request.user:
-                        send_notification(
-                            user = r.user_id,
-                            message= "New photo uploaded in your event",
-                            notif_type = "NEW_PHOTO",
-                            object_id = photo.photo_id
-                        )   
+                        notified_users.add(r.user_id)
+
+                tagged_users = PersonTag.objects.filter(event_id = event).select_related("user_id")
+                for t in tagged_users:
+                    if t.user_id != request.user:
+                        notified_users.add(t.user_id)   
+
+                for user in notified_users:
+                    send_notification(
+                        user = user,
+                        message = "New Photo uploaded in an Event",
+                        notif_type="NEW_PHOTO",
+                        object_id=photo.photo_id
+                    ) 
         serializer = PhotoSerializer(created_photos, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
