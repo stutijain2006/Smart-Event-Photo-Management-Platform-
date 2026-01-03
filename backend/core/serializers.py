@@ -113,7 +113,8 @@ class PhotoSerializer(serializers.ModelSerializer):
             "download_count",
             "created_by",
             "photographer_name",
-            "liked_by_me"
+            "liked_by_me",
+            "tags"
         ]
 
 class RegisterSerializer(serializers.ModelSerializer):

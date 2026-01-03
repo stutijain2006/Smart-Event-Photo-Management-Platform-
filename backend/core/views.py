@@ -22,6 +22,7 @@ from .notifications.utils import send_notification
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework.generics import ListAPIView
+from auto_tagging import generate_tags
 from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState, Notification
 from .serializers import (
     RegisterSerializer,
@@ -278,12 +279,19 @@ class PhotoListCreateView(generics.ListCreateAPIView):
         qs = Photo.objects.all().order_by("-uploaded_at")
         event_id = self.request.query_params.get("event_id")
         album_id = self.request.query_params.get("album_id")
+        search = self.request.query_params.get("search")   
 
         if event_id:
             qs = qs.filter(event_id=event_id)
         if album_id:
             qs = qs.filter(album_id=album_id)
 
+        if search:
+            qs = qs.filter(
+                Q(photo_id__icontains=search) |
+                Q(uploaded_by__person_name__icontains=search) |
+                Q(tags__icontains=search)
+            )
         return qs
 
     def perform_create(self, serializer):
@@ -507,6 +515,8 @@ class PhotoUpload(APIView):
             generate_variants(photo)
             try:
                 extract_and_save_metadata(photo)
+                tags = generate_tags(photo.file_original.path)
+                photo.tags = tags
                 photo.status = "ready"
             except Exception as e:
                 photo.status = "processing"

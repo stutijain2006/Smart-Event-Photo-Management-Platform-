@@ -43,7 +43,8 @@ function MyPhotosContent(){
         const q = search.toLowerCase();
         return(
             p.photographer_name?.toLowerCase().includes(q) || 
-            p.photo_id.toLowerCase().includes(q)
+            p.photo_id.toLowerCase().includes(q) ||
+            p.tags?.toLoweCase().includes(q)
         );
     });
 
