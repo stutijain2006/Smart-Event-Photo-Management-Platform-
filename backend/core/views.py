@@ -859,7 +859,7 @@ class MyPhotoListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs_uploaded = Photo.objects.filter(user_id = user)
+        qs_uploaded = Photo.objects.filter(uploaded_by = user)
         tagged_photo_ids = PersonTag.objects.filter(
             user_id = user,
             photo_id__isnull = False
@@ -882,6 +882,6 @@ class MyPhotoListView(ListAPIView):
             album_id__isnull = False
         ).values_list("album_id", flat=True)
 
-        qs_albums = Photo.objects.filter(album_id__in = album_ids)
+        qs_albums = Photo.objects.filter(albums__album_id__in = album_ids)
         qs = (qs_uploaded | Photo.objects.filter(photo_id__in = tagged_photo_ids) | qs_events | qs_albums)
         return qs.distinct().order_by("-uploaded_at")

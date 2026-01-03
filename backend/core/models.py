@@ -115,6 +115,7 @@ class Photo(models.Model):
     view_count = models.IntegerField(default=0)
     download_count = models.IntegerField(default=0) 
     albums = models.ManyToManyField(Album, related_name="photos", blank=True)
+    tags = models.TextField(blank=True)
 
     def __str__(self):
         return f"Photo: {self.photo_id}-{self.event_id}"

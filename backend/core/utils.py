@@ -4,6 +4,8 @@ from django.conf import settings
 from PIL import Image
 from django.core.files import File
 import os
+import numpy as np
+
 
 def generate_otp() -> str:
     return f"{random.randint(100000, 999999)}"
@@ -112,5 +114,4 @@ def generate_variants(photo):
 
     photo.save()
 
-
-        
+ 

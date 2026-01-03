@@ -5,7 +5,7 @@ import Modal from "../common/Modal";
 import DownloadPhotoModal from "../photos/DownloadPhotoModal";
 
 type ExtraActions = {
-    removeFromAlbum?: (ids : string[]) => Promise<void>;
+    removeFromAlbum?: (ids : string[]) => Promise<void>;    
 }
 type Props = {
     type: "photo" | "album" | "event"| "user";
@@ -38,7 +38,6 @@ export default function BatchToolbar({ type, canManage, extraActions } : Props){
         )
         alert("Like Status Updated ");
         clear();
-        window.location.reload();
     };
 
     const handleDownload = async(
