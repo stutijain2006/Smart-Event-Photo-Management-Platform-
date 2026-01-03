@@ -55,7 +55,7 @@ export default function MyFavourite() {
                                         id= {photo.photo_id}
                                         onClick={() => navigate(`/photos/${photo.photo_id}`)}
                                     >
-                                        <img src={`http://localhost:8000/${photo.file_original}`} alt="photo" className="w-[20vw] h-[40vh] object-contain" />
+                                        <img src={photo.file_original} alt="photo" className="w-[20vw] h-[40vh] object-contain" />
                                     </SelectableCard>
                                 ))}
                             </div>

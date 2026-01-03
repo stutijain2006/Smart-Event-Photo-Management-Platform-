@@ -5,7 +5,8 @@ from PIL import Image
 from django.core.files import File
 import os
 import numpy as np
-
+from PIL import Image
+import tensorflow as tf
 
 def generate_otp() -> str:
     return f"{random.randint(100000, 999999)}"
