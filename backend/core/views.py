@@ -21,6 +21,7 @@ from .utils import generate_variants
 from .notifications.utils import send_notification  
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from rest_framework.generics import ListAPIView
 from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState, Notification
 from .serializers import (
     RegisterSerializer,
@@ -850,3 +851,37 @@ class MarkNotificationRead(APIView):
         notif.is_read = True
         notif.save()
         return Response({"message": "Notification marked as read successfully"}, status=status.HTTP_200_OK)
+    
+class MyPhotoListView(ListAPIView):
+    authentication_classes= [CsrfExemptSessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PhotoSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs_uploaded = Photo.objects.filter(user_id = user)
+        tagged_photo_ids = PersonTag.objects.filter(
+            user_id = user,
+            photo_id__isnull = False
+        ).values_list("photo_id", flat=True)
+
+        event_ids = PersonTag.objects.filter(
+            user_id = user,
+            event_id__isnull = False
+        ).values_list("event_id", flat=True)
+
+        role_event_ids = UserRole.objects.filter(
+            user_id = user,
+        ).values_list("event_id", flat=True)
+
+        all_event_ids = set(event_ids) | set(role_event_ids)
+        qs_events = Photo.objects.filter(event_id__in = all_event_ids)
+
+        album_ids = PersonTag.objects.filter(
+            user_id = user,
+            album_id__isnull = False
+        ).values_list("album_id", flat=True)
+
+        qs_albums = Photo.objects.filter(album_id__in = album_ids)
+        qs = (qs_uploaded | Photo.objects.filter(photo_id__in = tagged_photo_ids) | qs_events | qs_albums)
+        return qs.distinct().order_by("-uploaded_at")

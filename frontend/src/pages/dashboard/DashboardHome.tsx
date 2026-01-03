@@ -17,6 +17,7 @@ export default function DashboardHome() {
                 <div className="grid grid-cols-2 gap-4">
                     <DashboardCard title="Events" onClick={() => navigate('/events')} />
                     <DashboardCard title="Albums" onClick={() => navigate('/albums')} />
+                    <DashboardCard title="Photos" onClick={() => navigate('/photos')} />
                     {isAdmin && (
                         <DashboardCard title= "Admin Panel" onClick={() => navigate('/admin/people')} />
                     )}

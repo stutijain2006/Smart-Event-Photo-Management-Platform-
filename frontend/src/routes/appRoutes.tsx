@@ -15,6 +15,7 @@ import AlbumDetailPage from '../pages/albums/AlbumDetailPage';
 import PhotoDetailPage from '../pages/photos/PhotoDetailPage';
 import AdminPeoplePage from '../pages/admin/AdminPeoplePage';
 import MyFavourite from '../pages/photos/MyFavourite';
+import MyPhotos from '../pages/photos/MyPhotos';
 
 export default function AppRoutes() {
     return (
@@ -77,6 +78,12 @@ export default function AppRoutes() {
             <Route path="/my-favourite" element={
                 <ProtectedRoute>
                     <MyFavourite />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/photos" element={
+                <ProtectedRoute>
+                    <MyPhotos />
                 </ProtectedRoute>
             } />
 

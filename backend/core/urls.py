@@ -33,7 +33,8 @@ from .views import (
     EventBatchDelete,
     PeopleBatchDeactivate,
     RoleListView,
-    AdminPeopleList
+    AdminPeopleList,
+    MyPhotoListView
 )
 
 urlpatterns =[
@@ -68,6 +69,7 @@ urlpatterns =[
     path("albums/batch-delete/", AlbumBatchDelete.as_view(), name="album-batch-delete"),
     path("events/batch-delete/", EventBatchDelete.as_view(), name="event-batch-delete"),
     path("people/batch-deactivate/", PeopleBatchDeactivate.as_view(), name="people-batch-deactivate"),
-    path("roles/", RoleListView.as_view(), name="role-list")
+    path("roles/", RoleListView.as_view(), name="role-list"),
+    path("photos/my/", MyPhotoListView.as_view(), name="my-photos"),
 ]
 urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
