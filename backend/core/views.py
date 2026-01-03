@@ -350,7 +350,7 @@ class AlbumPhotoManage(APIView):
     def get(self, request, album_id):
         album = get_object_or_404(Album, album_id=album_id)
         photos = album.photos.all()
-        serializer = PhotoSerializer(photos, many=True)
+        serializer = PhotoSerializer(photos, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, album_id):
@@ -487,7 +487,7 @@ class PhotoUpload(APIView):
                 photo.status = "processing"
             photo.save()  
             created_photos.append(photo)    
-        serializer = PhotoSerializer(created_photos, many=True)
+        serializer = PhotoSerializer(created_photos, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 def get_exif(img: Image.Image) -> dict:
@@ -589,7 +589,7 @@ class MyFavourite(APIView):
     def get(self,request):
         likes = PhotoLike.objects.filter(user_id = request.user).select_related("photo_id").order_by("-created_at")
         photos = [like.photo_id for like in likes]
-        serializer = PhotoSerializer(photos, many=True)
+        serializer = PhotoSerializer(photos, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class MyTaggedView(APIView):

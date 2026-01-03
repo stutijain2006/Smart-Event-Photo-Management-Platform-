@@ -40,9 +40,12 @@ export default function PhotoDetailPage(){
     }, [photoId]);
 
     const likePhoto = async() => {
-        await api.post(`/photos/${photoId}/like/`);
+        const res = await api.post(`/photos/${photoId}/like/`);
         setPhoto((prev: any) => {
-            return {...prev, like_count: prev.like_count + 1}
+            if (!prev) return prev;
+            return {...prev,
+                liked_by_me : res.data.liked,
+                like_count: res.data.linked ? prev.like_count + 1 : prev.like_count - 1};
         });
     }
 
@@ -78,7 +81,7 @@ export default function PhotoDetailPage(){
                 <div className="flex items-start justify-around px-4"> 
                     <button onClick={() => setShowShare(true)} className="bg-gray-300 p-2 rounded-lg"> Share </button>
                     <div className="flex justify-center items-center gap-3">
-                        <button onClick={likePhoto} className="bg-gray-300 p-2 rounded-lg"> ❤️ Like ({photo.like_count})</button>
+                        <button onClick={likePhoto} className= {`p-2 rounded-lg transition ${photo.liked_by_me ? "bg-gray-300 text-red-500" : "bg-gray-300"}`}>{photo.liked_by_me ? "❤️ Liked" : "🤍 Like" }</button>
                         <button onClick={() => setShowDetails(true)} className="bg-gray-300 p-2 rounded-lg"> 👀 Details</button>
                         <button onClick={() => setShowDownload(true)} className="bg-gray-300 p-2 rounded-lg"> ⬇ Download ({photo.download_count})</button>
                     </div>

@@ -85,6 +85,16 @@ class PhotoSerializer(serializers.ModelSerializer):
     file_watermarked = serializers.ImageField(read_only=True)
     file_compressed = serializers.ImageField(read_only=True)
     photographer_name = serializers.CharField(source = "uploaded_by.person_name", read_only = True)
+    liked_by_me = serializers.SerializerMethodField()
+
+    def get_liked_by_me(self, obj):
+        request= self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return PhotoLike.objects.filter(
+            photo_id = obj,
+            user_id = request.user
+        ).exists()
 
     class Meta:
         model = Photo
@@ -102,7 +112,8 @@ class PhotoSerializer(serializers.ModelSerializer):
             "view_count",
             "download_count",
             "created_by",
-            "photographer_name"
+            "photographer_name",
+            "liked_by_me"
         ]
 
 class RegisterSerializer(serializers.ModelSerializer):

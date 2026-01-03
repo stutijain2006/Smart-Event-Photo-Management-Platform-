@@ -140,7 +140,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                         <SelectableCard key={photo.photo_id} id={photo.photo_id} onClick={() => {
                             if (!selectionMode) navigate(`/photos/${photo.photo_id}`);
                         }} > 
-                            <img src={`${MEDIA_BASE}${photo.file_watermarked || photo.file_original}`} alt="photo" className="w-[20vw] h-[25vh] object-cover" />
+                            <img src={photo.file_original} alt="photo" className="w-[20vw] h-[25vh] object-cover" />
                         </SelectableCard>    
                     ))}
                     </div>

@@ -36,8 +36,9 @@ export default function BatchToolbar({ type, canManage, extraActions } : Props){
                 api.post(`/photos/${id}/like/`);
             })
         )
-        alert("Photos Liked Successfully");
+        alert("Like Status Updated ");
         clear();
+        window.location.reload();
     };
 
     const handleDownload = async(
