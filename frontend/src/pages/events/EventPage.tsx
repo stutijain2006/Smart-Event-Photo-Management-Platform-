@@ -22,7 +22,6 @@ function EventContent(){
     const { user } = useAppSelector((state) => state.auth);
     const [createdEvents, setCreatedEvents] = useState<any[]>([]);
     const [taggedEvents, setTaggedEvents] = useState<any[]>([]);
-    const [otherEvents, setOtherEvents] = useState<any[]>([]);
     const [search, setSearch] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const {selectionMode, setSelectionMode} = useBatch();
@@ -49,16 +48,8 @@ function EventContent(){
             (event: any) => event.created_by === user?.person_name
         );
 
-        const other = allEvents.filter(
-            (e:any) => 
-                !created.some((c:any) => c.event_id === e.event_id) &&
-                !tagged.some((t:any) => t.event_id === e.event_id)
-            
-        );
-
         setCreatedEvents(created);
         setTaggedEvents(tagged);
-        setOtherEvents(other);
     };
 
     const filterBySearch = (events: any[]) => {
@@ -88,7 +79,6 @@ function EventContent(){
             <input placeholder='Search Events ...' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-full mb-3' />
             <EventSection title = "Events Created by You" events={filterBySearch(createdEvents)} onNavigate={navigate} />
             <EventSection title = "Events You are Tagged In" events={filterBySearch(taggedEvents)} onNavigate={navigate} />
-            <EventSection title = "Other Accessible Events" events={filterBySearch(otherEvents)} onNavigate={navigate} />
             <NewEvent isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={loadEvents} />
         </DashboardLayout>
     )

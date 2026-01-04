@@ -63,7 +63,7 @@ function MyPhotosContent(){
     }, {});
 
     const renderPhoto = (photo:any) => (
-        <SelectableCard key={photo.photo_id} id={photo.photo_id} onClick={() => {
+        <SelectableCard key={photo.photo_id} id={String(photo.photo_id)} onClick={() => {
             if (!selectionMode){
                 navigate(`/photos/${photo.photo_id}`);
             }
@@ -97,17 +97,12 @@ function MyPhotosContent(){
 
     return(
         <DashboardLayout>
-            {selectionMode && (
-                <BatchToolbar type="photo" canManage={isAdmin} />
-            )}
+            <BatchToolbar type="photo" canManage={isAdmin} />
 
             <div className="p-6 flex flex-col items-center">
                 <div className="flex gap-6 mb-6">
-                    <button onClick={() => {setSelectionMode(prev => {
-                        if (prev) clear();
-                        return !prev;
-                    });
-                    }} className="px-4 py-2 rounded-lg bg-gray-300" >
+                    <button onClick={() => {setSelectionMode(!selectionMode)}}
+                    className="px-4 py-2 rounded-lg bg-gray-300" >
                         {selectionMode ? "Cancel" : "Select"}
                     </button>
 
