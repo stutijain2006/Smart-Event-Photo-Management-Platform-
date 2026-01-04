@@ -45,7 +45,19 @@ export default function BatchToolbar({ type, canManage, extraActions } : Props){
     ) => {
         for (const id of selectedIds){
             const res = await api.post(`/photos/${id}/download/`, {variant});
-            window.open(res.data.file_url, "_blank");
+            const fileUrl = res.data.file_url;
+            const fileResponse = await fetch(fileUrl, {
+                credentials: "include",
+            })
+            const blob = await fileResponse.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${id}-${variant}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
         }
         alert("Photos Downloaded Successfully");
         setShowDownloadModal(false);

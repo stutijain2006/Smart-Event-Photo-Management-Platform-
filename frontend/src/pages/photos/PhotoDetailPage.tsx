@@ -50,15 +50,17 @@ export default function PhotoDetailPage(){
     }
 
     const downloadPhoto = async(variant: "original" | "watermarked" | "compressed") => {
-        const res = await api.post(`/photos/${photoId}/download/`, {variant});
-        const fileUrl = res.data.file_url;
-        const fileResponse = await fetch(fileUrl, {
+        const res = await fetch(`http://localhost:8000/api/photos/${photoId}/download/`, {
+            method: "POST",
             credentials: "include",
-        })
-        const blob = await fileResponse.blob();
-        const file = new Blob([blob], {type: "image/jpeg"});
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({variant}),
+        });
+        const blob = await res.blob();
 
-        const url = window.URL.createObjectURL(file);
+        const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = `${photoId}-${variant}.jpg`;

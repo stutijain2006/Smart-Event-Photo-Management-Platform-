@@ -82,12 +82,14 @@ def generate_variants(photo):
     compressed_path = os.path.join(compressed_dir, f"{filename}.jpg")
 
     with Image.open(original_path) as img:
-        img.convert("RGB").save(
+        img = img.convert("RGB")
+        img.info.pop("exif", None)
+        img.save(
             compressed_path,
             format="JPEG",
             optimize=True,
             quality=40,
-            progressive=True
+            subsampling=2
         )
     photo.file_compressed.save(
         f"{filename}.jpg",

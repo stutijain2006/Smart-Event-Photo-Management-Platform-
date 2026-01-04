@@ -377,9 +377,13 @@ class DownloadPhoto(APIView):
         )    
         photo.download_count += 1
         photo.save(update_fields=["download_count"]) 
-        return Response({
-            "file_url": file_field.url
-        }, status=status.HTTP_200_OK)
+        response = FileResponse(
+            open(file_field.path, "rb"),
+            content_type="image/jpeg"
+        )
+        response["Content-Disposition"] = (f"attachment; filename={file_field.name}")
+        return response
+        
         
 class AlbumPhotoManage(APIView):
     authentication_classes= [CsrfExemptSessionAuthentication]
