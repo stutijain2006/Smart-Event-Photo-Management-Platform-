@@ -18,6 +18,7 @@ class Person (AbstractUser):
     department = models.CharField(max_length=50, blank=True)
     is_email_verified = models.BooleanField(default=False)
     omniport_user_id = models.CharField(max_length=500, unique=True, null=True, blank=True)
+    omniport_profile_picture = models.URLField(max_length=500, null=True, blank=True)
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['person_name']
@@ -26,6 +27,11 @@ class Person (AbstractUser):
 
     def __str__(self):
         return self.person_name or self.email_id
+
+    def get_profile_picture(self):
+        if self.profile_picture:
+            return self.profile_picture.url
+        return self.omniport_profile_picture
 
 
 class Role(models.Model):

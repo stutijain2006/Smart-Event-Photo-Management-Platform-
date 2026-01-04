@@ -23,6 +23,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework.generics import ListAPIView
 from .auto_tagging import generate_tags
+from django.shortcuts import redirect
 from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState, Notification
 from .serializers import (
     RegisterSerializer,
@@ -147,33 +148,53 @@ class OmniportLoginURLView(APIView):
     permission_classes = [permissions.AllowAny]
     def get(self, request):
         state = uuid.uuid4().hex
-        request.session['omniport_oauth_state'] = state
-        request.session.modified = True
-        request.session.save()
-        print("STATE SET", state)
-        print("SESSION LOGIN AT", dict(request.session))
+        # Store state in database instead of session for OAuth redirect reliability
+        try:
+            oauth_state = OAuthState.objects.create(state=state)
+            print("STATE SET IN DB:", state)
+            print("STATE ID:", oauth_state.id)
+            # Verify it was saved
+            verify_state = OAuthState.objects.filter(state=state).exists()
+            print("STATE VERIFIED IN DB:", verify_state)
+        except Exception as e:
+            print("ERROR CREATING STATE:", str(e))
+            raise
         authorize_url = get_omniport_authorize_url(state)
         return redirect(authorize_url)
     
 class OmniportCallBackView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    
     def get(self, request):
         code = request.GET.get('code')
         state = request.GET.get('state')
 
         if not code or not state:
             return Response({'error': 'Missing code or state'}, status=status.HTTP_400_BAD_REQUEST)
-        expected_state = request.session.get('omniport_oauth_state')
-        print("EXEPCTED_STATE" , expected_state)
-        print("RECEIVED_STATE" , state)
-        print("SESSION", dict(request.session))
-        if not expected_state or expected_state != state:
-            return Response({'error': 'Invalid state'}, status=status.HTTP_400_BAD_REQUEST)
-        del request.session['omniport_oauth_state']
+        
+        try:
+            with transaction.atomic():
+                oauth_state = OAuthState.objects.select_for_update().get(state=state)
+        except OAuthState.DoesNotExist:
+            return Response({'error': 'Invalid or already used state'}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             token_data = omniport_exchange_code_for_tokens(code)
         except Exception as e:
-            return Response({'error': 'Failed to exchange code for tokens'}, status=status.HTTP_400_BAD_REQUEST)
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_text = e.response.text
+                    if 'invalid_grant' in error_text.lower():
+                        return Response({
+                            'error': 'Authorization code has already been used or expired. Please try logging in again.'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                except:
+                    pass
+            return Response({
+                'error': 'Failed to exchange code for tokens',
+                'detail': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         
         access_token = token_data.get('access_token')
@@ -193,10 +214,13 @@ class OmniportCallBackView(APIView):
         contact_info = user_data.get("contactInformation") or {}
         full_name = person.get("fullName") or {}
         profile_photo = person.get("displayPicture") or {}
+        if profile_photo:
+            if profile_photo.startswith("/"):
+                profile_photo = f"https://channeli.in{profile_photo}"
         department = (
-            student.get("branch", {}).get("department", {}).get("name")
+            student.get("branch department name")
         )
-        email= contact_info.get("instituteWebmailAddress")
+        email= contact_info.get("emailAddress")
         email_verified = contact_info.get("emailAddressVerified", False)
 
         if not omniport_user_id or not email:
@@ -207,7 +231,7 @@ class OmniportCallBackView(APIView):
         user.email_id = email
         user.is_email_verified = email_verified
         user.department = department
-        user.profile_picture = profile_photo
+        user.omniport_profile_picture = profile_photo
         user.person_name = full_name
         user.is_active = True
         user.save()
@@ -226,8 +250,10 @@ class OmniportCallBackView(APIView):
             omniport_account.refresh_token = refresh_token
             omniport_account.save()
 
+        user.backend="django.contrib.auth.backends.ModelBackend"
         login(request, user)
-        return Response({"message": "User logged in successfully"}, status=status.HTTP_200_OK)
+        oauth_state.delete()
+        return redirect("http://localhost:3000/omniport/callback")
     
 
 class EventListCreateView(generics.ListCreateAPIView):

@@ -33,8 +33,17 @@ def omniport_exchange_code_for_tokens(code: str) -> dict:
         "code": code,
     }
 
+    print(f"TOKEN URL: {token_url}")
+    print(f"REDIRECT URI: {settings.OMNIPORT_REDIRECT_URI}")
+    print(f"CLIENT ID: {settings.OMNIPORT_CLIENT_ID[:10]}..." if settings.OMNIPORT_CLIENT_ID else "CLIENT ID: None")
+    
     response = requests.post(token_url, data=data)
-    response.raise_for_status()
+    
+    if not response.ok:
+        print(f"TOKEN EXCHANGE FAILED - Status: {response.status_code}")
+        print(f"Response: {response.text}")
+        response.raise_for_status()
+    
     return response.json()
 
 def omniport_user_data(access_token: str) -> dict:

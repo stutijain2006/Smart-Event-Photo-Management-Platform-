@@ -4,6 +4,7 @@ from django.db.models import F
 from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData, Role, Notification
 
 class PersonSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
     class Meta:
         model = Person
         fields = [
@@ -20,9 +21,7 @@ class PersonSerializer(serializers.ModelSerializer):
         ]
 
     def get_profile_picture(self, obj):
-        if obj.profile_picture:
-            return obj.profile_picture.url
-        return None
+        return obj.get_profile_picture()
     
     def get_roles(self, obj):
         roles = UserRole.objects.filter(user_id = obj).select_related('role_id')
