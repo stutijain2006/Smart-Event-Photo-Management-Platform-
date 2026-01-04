@@ -71,19 +71,32 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        user, created = Person.objects.get_or_create(
-            email_id=serializer.validated_data['email_id'],
-            defaults={
-                'person_name': serializer.validated_data['person_name'],
-                'is_active': True,
-            }
-        )
-        if not created and user.is_email_verified:
+        
+        email_id=serializer.validated_data['email_id']
+        password = serializer.validated_data['password']
+        person_name = serializer.validated_data['person_name']
+
+        user = Person.objects.filter(email_id=email_id).first()
+        if user and user.is_email_verified:
             return Response({
                 "message": "User already exists and is verified. Please Login.",
             }, status=status.HTTP_400_BAD_REQUEST)
-        user.set_password(serializer.validated_data['password'])
-        user.save()
+
+        if user and not user.is_email_verified:
+            user.set_password(password)
+            user.person_name = person_name
+            user.save()
+
+        if not user:
+            user = Person.objects.create(
+                email_id=email_id,
+                person_name=person_name,
+                is_active=True,
+                is_email_verified=False,
+            )
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+
         EmailOTP.objects.filter(email_id=user.email_id, is_used=False).update(is_used=True)
         otp = generate_otp()
         EmailOTP.objects.create(email_id=user.email_id, otp=otp)
@@ -384,7 +397,7 @@ class DownloadPhoto(APIView):
         response["Content-Disposition"] = (f"attachment; filename={file_field.name}")
         return response
         
-        
+
 class AlbumPhotoManage(APIView):
     authentication_classes= [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]

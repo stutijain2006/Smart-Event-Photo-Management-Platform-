@@ -131,6 +131,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password"
         ]
 
+        extra_kwargs = {
+            "email_id": {
+                "validators": []
+            }
+        }
+
     def create (self, validated_data):
         password = validated_data.pop("password")
         user= Person.objects.create(**validated_data)
