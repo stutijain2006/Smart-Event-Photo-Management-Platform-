@@ -12,8 +12,11 @@ export default function SelectableCard({id, onClick, children, disabled = false}
     const isSelected = selectedIds.includes(id);
 
     const handleClick = () => {
-        if (selectionMode && !disabled) toggle(id);
-        else onClick();
+        if (selectionMode){
+            if (!disabled) toggle(id);
+            return;
+        };
+        onClick();
     };
     const handleCheckBoxClick = (e:React.ChangeEvent<HTMLInputElement>) => {
         e.stopPropagation();

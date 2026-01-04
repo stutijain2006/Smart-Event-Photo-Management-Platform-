@@ -32,7 +32,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
     const [showTag, setShowTag] = useState(false);
     const [showAlbumModal, setShowAlbumModal] = useState(false);
     const [files, setFiles] = useState<any[]>([]);
-    const { selectionMode, setSelectionMode } = useBatch();
+    const { selectionMode, setSelectionMode , clear} = useBatch();
     const navigate = useNavigate();
     const [activeSelection, setActiveSelection] = useState<"album" | "photo" | null>(null);
 
@@ -79,9 +79,8 @@ function EventDetailPageContent({eventId, canManage}: any) {
 
     return(
         <DashboardLayout>
-
-            {selectionMode && activeSelection && (
-                <BatchToolbar type={activeSelection} canManage={canManage} />
+            {selectionMode && (
+                <BatchToolbar type={activeSelection ?? "photo"} canManage={canManage} />
             )}
 
             <div className="flex justify-center items-start px-4">
@@ -116,11 +115,13 @@ function EventDetailPageContent({eventId, canManage}: any) {
                 <>
                 <div className="flex justify-center items-center gap-6">
                     <button onClick={() => {
+                        clear();
                         setSelectionMode(true);
                         setActiveSelection("album");
                     }} className="px-4 py-2 bg-gray-300 w-[20vw]">Select Albums</button>
 
                     <button onClick={() => {
+                        clear();
                         setSelectionMode(true);
                         setActiveSelection("photo");
                     }} className="px-4 py-2 bg-gray-300 w-[20vw]">Select Photos</button>
@@ -128,6 +129,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
                 </>
             ) : (
                 <button onClick={() => {
+                    clear();
                     setSelectionMode(false);
                     setActiveSelection(null);
                 }} className="px-4 py-2 bg-gray-300 w-[20vw]">Cancel</button>

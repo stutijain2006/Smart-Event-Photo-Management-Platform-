@@ -37,7 +37,7 @@ export default function AlbumDetailPage() {
 function AlbumContent({ albumId, canManage} : {albumId : string, canManage: boolean}) {
 
     const navigate = useNavigate();
-    const {selectionMode, setSelectionMode} = useBatch();
+    const {selectionMode, setSelectionMode, clear} = useBatch();
     const [photos, setPhotos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [showTag, setShowTag] = useState(false);
@@ -113,13 +113,15 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
 
     return (
         <DashboardLayout>
-            <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
-                for (const id of ids){
-                    await api.delete(`/albums/${albumId}/photos/`, {data: {photo_id: id}});
-                }
-                await fetchPhotos();
-            },
-            }} />
+            {selectionMode && (
+                <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
+                    for (const id of ids){
+                        await api.delete(`/albums/${albumId}/photos/`, {data: {photo_id: id}});
+                    }
+                    await fetchPhotos();
+                },
+                }} />
+            )}
             <div className="p-6 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-4 mb-6">
                     <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
@@ -127,7 +129,12 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                 </div>
 
                 <div className="flex justify-center items-center gap-6">
-                    <button onClick={() => setSelectionMode(!selectionMode)} className="px-4 py-2 rounded-lg bg-gray-300">
+                    <button onClick={() => {
+                        if (selectionMode){
+                            clear();
+                        }
+                        setSelectionMode(!selectionMode)
+                    }} className="px-4 py-2 rounded-lg bg-gray-300">
                         {selectionMode? "Cancel" : "Select"}
                     </button>
                     {canManage && (

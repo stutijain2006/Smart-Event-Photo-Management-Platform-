@@ -97,7 +97,9 @@ function MyPhotosContent(){
 
     return(
         <DashboardLayout>
-            <BatchToolbar type="photo" canManage={isAdmin} />
+            {selectionMode && (
+                <BatchToolbar type="photo" canManage={isAdmin} />
+            )}
 
             <div className="p-6 flex flex-col items-center">
                 <div className="flex gap-6 mb-6">
