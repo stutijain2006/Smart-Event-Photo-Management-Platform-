@@ -149,6 +149,9 @@ class OmniportLoginURLView(APIView):
         state = uuid.uuid4().hex
         request.session['omniport_oauth_state'] = state
         request.session.modified = True
+        request.session.save()
+        print("STATE SET", state)
+        print("SESSION LOGIN AT", dict(request.session))
         authorize_url = get_omniport_authorize_url(state)
         return redirect(authorize_url)
     
@@ -161,6 +164,9 @@ class OmniportCallBackView(APIView):
         if not code or not state:
             return Response({'error': 'Missing code or state'}, status=status.HTTP_400_BAD_REQUEST)
         expected_state = request.session.get('omniport_oauth_state')
+        print("EXEPCTED_STATE" , expected_state)
+        print("RECEIVED_STATE" , state)
+        print("SESSION", dict(request.session))
         if not expected_state or expected_state != state:
             return Response({'error': 'Invalid state'}, status=status.HTTP_400_BAD_REQUEST)
         del request.session['omniport_oauth_state']
@@ -168,6 +174,7 @@ class OmniportCallBackView(APIView):
             token_data = omniport_exchange_code_for_tokens(code)
         except Exception as e:
             return Response({'error': 'Failed to exchange code for tokens'}, status=status.HTTP_400_BAD_REQUEST)
+        
         
         access_token = token_data.get('access_token')
         refresh_token = token_data.get('refresh_token')
@@ -186,15 +193,9 @@ class OmniportCallBackView(APIView):
         contact_info = user_data.get("contactInformation") or {}
         full_name = person.get("fullName") or {}
         profile_photo = person.get("displayPicture") or {}
-        roles = [
-            r.get("role")
-            for r in person.get("roles", [])
-            if r.get("activeStatus") == "ActiveStatus.IS_ACTIVE"
-        ]
         department = (
             student.get("branch", {}).get("department", {}).get("name")
         )
-        current_year = student.get("currentYear")
         email= contact_info.get("instituteWebmailAddress")
         email_verified = contact_info.get("emailAddressVerified", False)
 
@@ -206,10 +207,8 @@ class OmniportCallBackView(APIView):
         user.email_id = email
         user.is_email_verified = email_verified
         user.department = department
-        user.current_year = current_year
         user.profile_picture = profile_photo
         user.person_name = full_name
-        user.roles = roles
         user.is_active = True
         user.save()
         
@@ -524,21 +523,21 @@ class PhotoUpload(APIView):
             created_photos.append(photo) 
 
             if event: 
-                notified_users = set()
-                if event.created_by != request.user:
-                    notified_users.add(event.created_by)
+                notified_user_ids = set()
+                if event.created_by and event.created_by != request.user.user_id:
+                    notified_user_ids.add(event.created_by)
 
-                roles = UserRole.objects.filter(event_id = event).select_related("user_id")
+                roles = UserRole.objects.filter(event_id = event).values_list("user_id", flat=True)
                 for r in roles:
-                    if r.user_id != request.user:
-                        notified_users.add(r.user_id)
+                    if r != request.user.user_id:
+                        notified_user_ids.add(r)
 
-                tagged_users = PersonTag.objects.filter(event_id = event).select_related("user_id")
+                tagged_users = PersonTag.objects.filter(event_id = event).values_list("user_id", flat=True)
                 for t in tagged_users:
-                    if t.user_id != request.user:
-                        notified_users.add(t.user_id)   
+                    if t != request.user.user_id:
+                        notified_user_ids.add(t)   
 
-                for user in notified_users:
+                for user in notified_user_ids:
                     send_notification(
                         user = user,
                         message = "New Photo uploaded in an Event",

@@ -17,6 +17,7 @@ class Person (AbstractUser):
     batch = models.CharField(max_length=10, blank=True)
     department = models.CharField(max_length=50, blank=True)
     is_email_verified = models.BooleanField(default=False)
+    omniport_user_id = models.CharField(max_length=500, unique=True, null=True, blank=True)
 
     USERNAME_FIELD = 'email_id'
     REQUIRED_FIELDS = ['person_name']

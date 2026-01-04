@@ -21,6 +21,7 @@ def send_notification(user, message, notif_type, object_id = None):
                 "type": notif_type,
                 "object_id": str(object_id) if object_id else None,
                 "created_at": notification.created_at.isoformat(),
+                "is_read": notification.is_read,
             }
         }
     )

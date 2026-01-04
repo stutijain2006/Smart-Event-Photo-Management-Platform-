@@ -42,7 +42,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
     const [search, setSearch] = useState("");
     const [showTag, setShowTag] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const MEDIA_BASE = "http://localhost:8000";
+    const MEDIA_BASE = "http://127.0.0.1:8000";
     const fetchPhotos = async() => {
         const response = await api.get(`/albums/${albumId}/photos/`);
         setPhotos(response.data);
