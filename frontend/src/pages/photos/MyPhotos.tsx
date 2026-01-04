@@ -27,7 +27,7 @@ function MyPhotosContent(){
     const [layout, setLayout] = useState<LayoutType>("grid-4");
     const [selectedTag, setSelectedTag] = useState<string>("all"); 
 
-    const { selectionMode, setSelectionMode} = useBatch();
+    const { selectionMode, setSelectionMode, clear} = useBatch();
     const allTags = Array.from(
         new Set(
             photos.flatMap((p) => p.tags ? p.tags.split(",").map((t:string) => t.trim()) : [])
@@ -103,7 +103,11 @@ function MyPhotosContent(){
 
             <div className="p-6 flex flex-col items-center">
                 <div className="flex gap-6 mb-6">
-                    <button onClick={() => setSelectionMode(!selectionMode)} className="px-4 py-2 rounded-lg bg-gray-300" >
+                    <button onClick={() => {setSelectionMode(prev => {
+                        if (prev) clear();
+                        return !prev;
+                    });
+                    }} className="px-4 py-2 rounded-lg bg-gray-300" >
                         {selectionMode ? "Cancel" : "Select"}
                     </button>
 

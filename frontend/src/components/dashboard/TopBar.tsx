@@ -29,6 +29,7 @@ export default function TopBar() {
                 {isAdmin && (
                     <div className='text-[1rem] font-semibold' onClick= {() => navigate("/admin/people")} >People</div>
                 )}
+                <div className='text-[1rem] font-semibold' onClick={() => navigate("/photos")} >Photos</div>
                 {user && (
                     <img src={profilePicture} alt="Profile" className="w-[6vw] h-auto rounded-full cursor-pointer" onClick={() => navigate('/profile')} /> 
                 )}

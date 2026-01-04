@@ -113,15 +113,13 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
 
     return (
         <DashboardLayout>
-            {selectionMode && (
-                <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
-                    for (const id of ids){
-                        await api.delete(`/albums/${albumId}/photos/`, {data: {photo_id: id}});
-                    }
-                    await fetchPhotos();
-                },
-                }} />
-            )}
+            <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
+                for (const id of ids){
+                    await api.delete(`/albums/${albumId}/photos/`, {data: {photo_id: id}});
+                }
+                await fetchPhotos();
+            },
+            }} />
             <div className="p-6 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-4 mb-6">
                     <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
