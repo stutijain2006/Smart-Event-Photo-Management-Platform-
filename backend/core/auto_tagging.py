@@ -1,8 +1,8 @@
 import numpy as np
-from tensorflow.keras.applications.resnet50 import (
+from keras.applications.resnet50 import (
     ResNet50, preprocess_input, decode_predictions
 )
-from tensorflow.keras.preprocessing import image
+from keras.preprocessing import image
 from PIL import Image
 
 model = ResNet50(weights='imagenet')

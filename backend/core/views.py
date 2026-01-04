@@ -22,7 +22,7 @@ from .notifications.utils import send_notification
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework.generics import ListAPIView
-from auto_tagging import generate_tags
+from .auto_tagging import generate_tags
 from .models import Person , EmailOTP, UserRole , OmniportAccount, Photo, Album, Events, PhotoLike , Comments, Download, PersonTag, Role, RoleChangeRequest, PhotoMetaData, OAuthState, Notification
 from .serializers import (
     RegisterSerializer,

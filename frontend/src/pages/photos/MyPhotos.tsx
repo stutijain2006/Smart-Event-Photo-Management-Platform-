@@ -4,8 +4,6 @@ import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import SelectableCard from "../../components/batch/SelectableCard";
 import BatchProvider, { useBatch } from "../../components/batch/BatchProvider";
 import { useNavigate } from "react-router-dom";
-import DownloadPhotoModal from "../../components/photos/DownloadPhotoModal";
-import Modal from "../../components/common/Modal";
 import { useAppSelector } from "../../app/hooks";
 import { canManagePhotos } from "../../utils/permission/permissions";
 import BatchToolbar from "../../components/batch/BatchToolbar";
@@ -27,8 +25,14 @@ function MyPhotosContent(){
     const [photos, setPhotos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [layout, setLayout] = useState<LayoutType>("grid-4");
+    const [selectedTag, setSelectedTag] = useState<string>("all"); 
 
     const { selectionMode, setSelectionMode} = useBatch();
+    const allTags = Array.from(
+        new Set(
+            photos.flatMap((p) => p.tags ? p.tags.split(",").map((t:string) => t.trim()) : [])
+        )
+    );
 
     const fetchPhotos = async() => {
         const res = await api.get(`/photos/my/`);
@@ -41,11 +45,14 @@ function MyPhotosContent(){
 
     const filteredPhotos = photos.filter((p) => {
         const q = search.toLowerCase();
-        return(
+        const matchesSearch = (
             p.photographer_name?.toLowerCase().includes(q) || 
             p.photo_id.toLowerCase().includes(q) ||
-            p.tags?.toLoweCase().includes(q)
+            p.tags?.toLowerCase().includes(q)
         );
+
+        const matchesTag = selectedTag === "all" || p.tags?.toLowerCase().includes(selectedTag?.toLowerCase());
+        return matchesSearch && matchesTag;
     });
 
     const groupedByDate = filteredPhotos.reduce((acc: any, p: any) => {
@@ -61,7 +68,9 @@ function MyPhotosContent(){
                 navigate(`/photos/${photo.photo_id}`);
             }
         }} >
-            <img src={photo.file_original} alt="photo" className="w-[20vw] h-[25vw] object-contain" />
+            <div className="relative w-full h-full">
+                <img src={photo.file_original} alt="photo" className="w-[20vw] h-[25vw] object-contain" />
+            </div>
         </SelectableCard>
     );
 
@@ -105,6 +114,12 @@ function MyPhotosContent(){
                         <option value="timeline">Timeline</option>
                     </select>
                 </div>
+                <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className="px-4 py-2 border rounded-lg">
+                    <option value ="all">All</option>
+                    {allTags.map((tag) => (
+                        <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                </select>
 
                 <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by Photographer ID or Photo ID" className="px-4 py-2 rounded-lg mb-6 border w-[60vw]" />
 
