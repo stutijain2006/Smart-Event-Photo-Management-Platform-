@@ -44,12 +44,15 @@ export default function BatchToolbar({ type, canManage, extraActions } : Props){
         variant: "original" | "compressed" | "watermarked"
     ) => {
         for (const id of selectedIds){
-            const res = await api.post(`/photos/${id}/download/`, {variant});
-            const fileUrl = res.data.file_url;
-            const fileResponse = await fetch(fileUrl, {
+            const res = await fetch(`http://localhost:8000/api/photos/${id}/download/`, {
+                method: "POST",
                 credentials: "include",
-            })
-            const blob = await fileResponse.blob();
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({variant}),
+            });
+            const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
