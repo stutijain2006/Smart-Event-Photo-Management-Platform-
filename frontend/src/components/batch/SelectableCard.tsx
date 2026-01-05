@@ -26,7 +26,7 @@ export default function SelectableCard({id, onClick, children, disabled = false}
     return (
         <div onClick={handleClick} className={`relative cursor-pointer ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
             {selectionMode && (
-                <input type = "checkbox" checked={isSelected} onChange={handleCheckBoxClick} className="absolute top-2 left-2 z-10" />
+                <input type = "checkbox" checked={isSelected} onChange={handleCheckBoxClick} className="absolute top-2 left-2 z-50 bg-white" />
             )}
             {children}
         </div>

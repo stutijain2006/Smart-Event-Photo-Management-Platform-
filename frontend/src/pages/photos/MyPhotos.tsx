@@ -20,7 +20,7 @@ export default function MyPhotos(){
 }
 function MyPhotosContent(){
     const { user } = useAppSelector((state) => state.auth);
-    const isAdmin = canManagePhotos(user?.roles);
+    const isUser = canManagePhotos(user?.roles);
     const navigate = useNavigate();
     const [photos, setPhotos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
@@ -96,10 +96,11 @@ function MyPhotosContent(){
     };
 
     return(
-        <DashboardLayout>
-            {selectionMode && (
-                <BatchToolbar type="photo" canManage={isAdmin} />
+        <>
+        {selectionMode && (
+                <BatchToolbar type="photo" canManage={isUser} />
             )}
+        <DashboardLayout>
 
             <div className="p-6 flex flex-col items-center">
                 <div className="flex gap-6 mb-6">
@@ -131,5 +132,6 @@ function MyPhotosContent(){
                 )}
             </div>
         </DashboardLayout>
+        </>
     )
 }

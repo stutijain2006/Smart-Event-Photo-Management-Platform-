@@ -2,7 +2,6 @@ import  {useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
-import PhotoCard from "../../components/photos/PhotoCard";
 import { useAppSelector } from "../../app/hooks";
 import ShowTag from "../../components/tags/TagPeople";
 import Modal from "../../components/common/Modal";
@@ -112,8 +111,8 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
     });
 
     return (
-        <DashboardLayout>
-            {selectionMode && (
+        <>
+        {selectionMode && (
                 <BatchToolbar type= "photo" canManage={canManage} extraActions={{removeFromAlbum: async (ids: string[]) => {
                     for (const id of ids){
                         await api.delete(`/albums/${albumId}/photos/`, {data: {photo_id: id}});
@@ -122,6 +121,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                 },
                 }} />
             )}
+        <DashboardLayout>
             <div className="p-6 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-4 mb-6">
                     <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
@@ -161,7 +161,7 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {filteredPhotos.map((photo: any) => (
                         <SelectableCard key={photo.photo_id} id={photo.photo_id} onClick={() => {
-                            if (!selectionMode) navigate(`/photos/${photo.photo_id}`);
+                           navigate(`/photos/${photo.photo_id}`);
                         }} > 
                             <img src={photo.file_original} alt="photo" className="w-[20vw] h-[25vh] object-cover" />
                         </SelectableCard>    
@@ -171,5 +171,6 @@ function AlbumContent({ albumId, canManage} : {albumId : string, canManage: bool
             </div>
             <Modal isOpen={showTag} onClose={() => setShowTag(false)}><ShowTag  type="album" objectId={albumId} onClose = {() => setShowTag(false)} /></Modal>
         </DashboardLayout>
+        </>
     );
 }

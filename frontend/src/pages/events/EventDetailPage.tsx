@@ -78,10 +78,11 @@ function EventDetailPageContent({eventId, canManage}: any) {
     const onClose = () => window.history.back();
 
     return(
-        <DashboardLayout>
-            {selectionMode && (
+        <>
+        {selectionMode && (
                 <BatchToolbar type={activeSelection ?? "photo"} canManage={canManage} />
             )}
+        <DashboardLayout>
 
             <div className="flex justify-center items-start px-4">
                 <button onClick={onClose} className='text-[1.2rem] font-semibold'>←</button>
@@ -175,5 +176,6 @@ function EventDetailPageContent({eventId, canManage}: any) {
                 <ShowTag type="event" objectId={eventId} onClose={() => setShowTag(false)} />
             </Modal>
         </DashboardLayout>
+        </>
     );
 }
