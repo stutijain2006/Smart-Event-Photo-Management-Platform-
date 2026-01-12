@@ -17,8 +17,8 @@ export default function ProfileRoleChangeRequest({onClose}: {onClose: () => void
     const [roles, setRoles] = useState<Role[]>([]);
 
     useEffect(() => {
-        api.get('/events/').then(res => {
-            setEvents(res.data);
+        api.get('/my/tags').then(res => {
+            setEvents(res.data.events || []);
         });
         api.get('/roles/').then(res => {
             setRoles(res.data);
