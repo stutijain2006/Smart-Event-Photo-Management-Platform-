@@ -40,11 +40,11 @@ export default function AdminPeoplePage() {
 
     return(
         <DashboardLayout>
-            <input placeholder='Search People' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-full' />
+            <input placeholder='Search People' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-[80vw] mb-4' />
             
             <Section title="Events">
                 {events.map(event => (
-                    <div key={event.event_id} className='bg-gray-300 rounded-lg shadow'>
+                    <div key={event.event_id} className='bg-gray-200 px-6 py-2 rounded-lg shadow'>
                         <div className='flex items-center justify-between'>
                             <div className='font-bold'>{event.event_name}</div>
                             <button className='text-blue-600' onClick={() => {
@@ -85,7 +85,7 @@ export default function AdminPeoplePage() {
 
             <Section title="People List">
                 {filteredPeople.map(p => (
-                    <div key={p.user_id} className='grid grid-cols-3 bg-white p-3 rounded-lg shadow gap-4 w-[25vw] '>
+                    <div key={p.user_id} className='flex flex-col bg-white p-3 rounded-lg shadow gap-4'>
                         <div className='font-bold'>{p.person_name}</div>
                         <div className='text-[0.8rem] text-gray-600'>{p.email_id}</div>
                         <button className='text-blue-600' onClick={() => {
@@ -101,13 +101,13 @@ export default function AdminPeoplePage() {
 
             <Section title="Pending Requests">
                 {requests.map(r => (
-                    <div key={r.request_id} className='grid grid-cols-4 bg-white p-3 rounded-lg shadow'>
+                    <div key={r.request_id} className='flex flex-col bg-white px-4 py-2 rounded-lg shadow gap-4'>
                         <div className='font-bold'>{r.user_name}</div>
                         <div className='font-semibold'>{r.event_name}</div>
                         <div className='text-gray-600'>{r.target_role_name}</div>
                         <div className='text-[0.8rem] text-gray-600'>{r.status}</div>
                         <div className='text-[0.8rem] text-gray-600'>{r.reason}</div>
-                        <div className='flex gap-2'>
+                        <div className='flex gap-4'>
                             <button className='text-green-600' onClick={() => handleReview(r.request_id, "approve")} >Accept</button>
                             <button className='text-red-600' onClick={() => handleReview(r.request_id, "reject")}>Decline</button>
                         </div>
@@ -139,7 +139,7 @@ function Section({title, children} : any){
     return(
         <div className="mb-8">
             <h2 className="text-[1.2rem] font-semibold mb-4">{title}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 px-4 py-2">
                 {children}
             </div>
         </div>
