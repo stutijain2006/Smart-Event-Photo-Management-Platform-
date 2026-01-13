@@ -30,11 +30,11 @@ export default function MyFavourite() {
         <BatchProvider>
             <DashboardLayout>
                 <div className='p-6'>
-                    <div className='flex flex-col items-center justify-start gap-4 mb-6'>
-                        <div className='flex justify-around items-center mx-4'>
+                    <div className='flex flex-col items-start justify-start gap-4 mb-6'>
+                        <div className='flex justify-around items-center mx-4 mb-4'>
                             <button
                                 onClick={() => navigate(-1)}
-                                className="text-[1.3rem]"
+                                className="text-[1.3rem] mr-6"
                             >
                                 ←
                             </button>
@@ -55,7 +55,7 @@ export default function MyFavourite() {
                                         id= {photo.photo_id}
                                         onClick={() => navigate(`/photos/${photo.photo_id}`)}
                                     >
-                                        <img src={photo.file_original} alt="photo" className="w-[20vw] h-[40vh] object-contain" />
+                                        <img src={photo.file_original} alt="photo" className="w-[23vw] h-[45vh] object-contain" />
                                     </SelectableCard>
                                 ))}
                             </div>

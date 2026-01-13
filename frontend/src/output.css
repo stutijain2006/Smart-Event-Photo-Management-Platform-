@@ -34,6 +34,7 @@
     --spacing: 0.25rem;
     --breakpoint-xl: 80rem;
     --container-3xl: 48rem;
+    --container-6xl: 72rem;
     --container-7xl: 80rem;
     --text-lg: 1.125rem;
     --text-lg--line-height: calc(1.75 / 1.125);
@@ -343,6 +344,9 @@
   .h-\[40vh\] {
     height: 40vh;
   }
+  .h-\[45vh\] {
+    height: 45vh;
+  }
   .h-\[50vh\] {
     height: 50vh;
   }
@@ -379,6 +383,9 @@
   .w-\[20vw\] {
     width: 20vw;
   }
+  .w-\[23vw\] {
+    width: 23vw;
+  }
   .w-\[25vw\] {
     width: 25vw;
   }
@@ -408,6 +415,9 @@
   }
   .max-w-3xl {
     max-width: var(--container-3xl);
+  }
+  .max-w-6xl {
+    max-width: var(--container-6xl);
   }
   .max-w-7xl {
     max-width: var(--container-7xl);
