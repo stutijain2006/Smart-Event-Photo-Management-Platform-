@@ -17,7 +17,7 @@ export default function TopBar() {
     const isAdmin = user?.roles?.some(
         (r:any) => r.role_name === 'ADMIN'
     )
-    const profilePicture = user?.profile_picture || 'https://via.placeholder.com/40';
+    const profilePicture = user?.profile_picture ?user.profile_picture.startsWith('http') ? user.profile_picture : `${BACKEND_URL}${user.profile_picture}` : 'https://via.placeholder.com/40';
 
     return (
         <div className="flex items-center justify-between p-4 bg-blue-200 shadow-md">

@@ -18,6 +18,7 @@ export default function ProfilePage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isRoleModelOpen, setIsRoleModalOpen] = useState(false);
     const navigate = useNavigate();
+    const BACKEND_URL = "http://127.0.0.1:8000";
 
     useEffect(() => {
         const fetchData = async() => {
@@ -50,7 +51,7 @@ export default function ProfilePage() {
                     <div className='text-[1.4rem] font-bold'>Profile</div>
                 </div>
                 <div className='w-full flex items-start justify-start gap-8 px-4 my-8'>
-                    <div className='w-[30vw] h-[40vh] mr-6'><img src={user.profile_picture || "http://via.placeholder.com/40"} alt="Profile Picture" className='w-full h-full object-contain rounded-lg' /></div>
+                    <div className='w-[30vw] h-[45vh] object-contain mr-6'><img src={user?.profile_picture ?user.profile_picture.startsWith('http') ? user.profile_picture : `${BACKEND_URL}${user.profile_picture}` : 'https://via.placeholder.com/40'} alt="Profile Picture" className='w-full h-full object-cover rounded-lg' /></div>
                     <div className='flex flex-col items-start justify-center gap-4 mr-12'>
                         <div className='text-[1.2rem] font-semibold'>{user.person_name}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.email_id}</div>
