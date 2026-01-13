@@ -45,13 +45,13 @@ export default function ProfilePage() {
         <>
         <DashboardLayout>
             <div className='flex flex-col items-start justify-center gap-4'>
-                <div className='flex items-center justify-center w-full px-4'>
-                    <div className='text-[1.3rem] font-semibold' onClick={handleBackClick}>←</div>
-                    <div className='text-[1.3rem] font-bold'>Profile</div>
+                <div className='flex items-start justify-center w-full px-4'>
+                    <div className='text-[1.3rem] font-semibold mr-6' onClick={handleBackClick}>←</div>
+                    <div className='text-[1.4rem] font-bold'>Profile</div>
                 </div>
-                <div className='w-[80vw] flex items-start justify-center px-4 my-8'>
-                    <div className='w-[30vw] h-[40vh] object-contain'><img src={user.profile_picture ? `http://127.0.0.1:8000${user.profile_picture}` : "http://via.placeholder.com/40"} alt="Profile Picture" /></div>
-                    <div className='flex flex-col items-start justify-center gap-4'>
+                <div className='w-full flex items-start justify-start gap-8 px-4 my-8'>
+                    <div className='w-[30vw] h-[40vh] mr-6'><img src={user.profile_picture ? `http://127.0.0.1:8000${user.profile_picture}` : "http://via.placeholder.com/40"} alt="Profile Picture" className='w-full h-full object-cover rounded-lg' /></div>
+                    <div className='flex flex-col items-start justify-center gap-4 mr-12'>
                         <div className='text-[1.2rem] font-semibold'>{user.person_name}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.email_id}</div>
                         <div className='text-[1.05rem] font-semibold'>{user.short_bio}</div>
@@ -61,25 +61,25 @@ export default function ProfilePage() {
                     <div className='text-[1.2rem] font-semibold' onClick={() => setIsEditModalOpen(true)}>✎</div>
                 </div>
 
-                <div className='flex flex-col items-start justify-center gap-4'>
+                <div className='flex flex-col items-start justify-center gap-4 w-full'>
                     <div className='text-[1.3rem] font-bold'>Request Role Change :</div>
                     <button onClick={() => setIsRoleModalOpen(true)} className='bg-blue-400 text-white px-4 py-2 rounded-xl'>Request Role Change</button>
                 </div>
 
 
-                <div className='flex flex-col items-start justify-center px-4'> 
-                    <div className='text-[1.2rem] font-bold mb-2'>Your Roles : </div>
-                    <div className='flex flex-wrap flex-col gap-2'>
+                <div className='flex flex-col items-start justify-center w-full mb-6'> 
+                    <div className='text-[1.2rem] font-bold mb-4'>Your Roles : </div>
+                    <div className='flex flex-wrap flex-col gap-4'>
                         {userRoles.map((ur) => (
                             <div key={ur.id} className='bg-gray-200 p-3 rounded-xl text-[0.8rem]'>
-                                <span>{ur.event_name} </span>
+                                <span>{ur.event_name || "Overall"} </span>
                                 <span> - {ur.role_name}</span>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
-            <button onClick={handleLogOut} className='font-semibold text-[1rem] shadow z-50 rounded-lg px-5 py-4 bg-red-800'>Logout</button>
+            <button onClick={handleLogOut} className='font-semibold text-[0.8rem] shadow z-50 rounded-lg px-4 py-2 bg-red-700'>Logout</button>
         </DashboardLayout>
         <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
             <ProfileEditComponent user={user} />
