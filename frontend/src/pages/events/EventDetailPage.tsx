@@ -56,6 +56,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
             alert("Images uploaded successfully");
             const photosRes = await api.get(`/photos/?event_id=${eventId}`);
             setPhotos(photosRes.data);
+            setFiles([]);
         }catch(error){
             console.error("Error uploading images: ", error);
             alert("Error uploading images");
@@ -140,7 +141,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
                     {albums.map((album) => (
                         <SelectableCard key={album.album_id} 
-                        id = {album.album_id} disabled={activeSelection !== "album"} onClick={() => {
+                        id = {album.album_id} disabled={selectionMode && activeSelection !== "album"} onClick={() => {
                             if (!selectionMode){ navigate(`/albums/${album.album_id}`); }
                         }}>
                             <h3 className="font-semibold text-[1rem]">{album.album_name}</h3>
@@ -155,7 +156,7 @@ function EventDetailPageContent({eventId, canManage}: any) {
                 <div className="text-[1.2rem] font-semibold mb-2">Photos</div>
                 <div className="grid lg:grid-cols-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {photos.map((photo) => (
-                        <SelectableCard key={photo.photo_id} id = {photo.photo_id} disabled={activeSelection !== "photo"} onClick={ () => {
+                        <SelectableCard key={photo.photo_id} id = {photo.photo_id} disabled={selectionMode && activeSelection !== "photo"} onClick={ () => {
                             if (!selectionMode){ navigate(`/photos/${photo.photo_id}`);
                         }
                         }}>

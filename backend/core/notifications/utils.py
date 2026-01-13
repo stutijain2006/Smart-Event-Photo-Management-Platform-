@@ -1,8 +1,11 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from ..models import Notification
+from ..models import Notification, Person
 
 def send_notification(user, message, notif_type, object_id = None):
+    if not isinstance(user, Person):
+        user = Person.objects.get(user_id = user)
+    
     notification= Notification.objects.create(
         user = user,
         message = message,
