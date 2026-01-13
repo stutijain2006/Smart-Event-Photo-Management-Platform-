@@ -303,6 +303,8 @@ class MeSerializer(serializers.ModelSerializer):
     def get_profile_picture(self, obj):
         if obj.profile_picture:
             return obj.profile_picture.url
+        if obj.omniport_profile_picture:
+            return obj.omniport_profile_picture
         return None
     
     def get_roles(self, obj):

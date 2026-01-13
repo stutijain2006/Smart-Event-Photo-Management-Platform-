@@ -220,6 +220,8 @@ class OmniportCallBackView(APIView):
         except Exception as e:
             return Response({"error": "Failed to get user data"}, status=status.HTTP_400_BAD_REQUEST)
         
+        print("USER DATA:", user_data)
+        
         omniport_user_id = str(user_data.get('userId') or user_data.get("username"))
         username = user_data.get("username")
         person = user_data.get("person") or {}
