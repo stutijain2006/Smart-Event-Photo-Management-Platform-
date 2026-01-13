@@ -105,23 +105,24 @@ function MyPhotosContent(){
             <div className="p-6 flex flex-col items-center">
                 <div className="flex gap-6 mb-6">
                     <button onClick={() => {setSelectionMode(!selectionMode)}}
-                    className="px-4 py-2 rounded-lg bg-gray-300" >
+                    className="px-6 py-2 rounded-lg bg-gray-300" >
                         {selectionMode ? "Cancel" : "Select"}
                     </button>
 
-                    <select value={layout} onChange={(e) => setLayout(e.target.value as LayoutType)} className="px-4 py-2 rounded-lg border">
+                    <select value={layout} onChange={(e) => setLayout(e.target.value as LayoutType)} className="px-6 py-2 rounded-lg border">
                         <option value="grid-3">Grid 3</option>
                         <option value="grid-4">Grid 4</option>
                         <option value="masonry">Masonry</option>
                         <option value="timeline">Timeline</option>
                     </select>
+
+                    <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className="px-6 py-2 border rounded-lg">
+                        <option value ="all">All</option>
+                        {allTags.map((tag) => (
+                            <option key={tag} value={tag}>{tag}</option>
+                        ))}
+                    </select>
                 </div>
-                <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className="px-4 py-2 border rounded-lg">
-                    <option value ="all">All</option>
-                    {allTags.map((tag) => (
-                        <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                </select>
 
                 <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by Photographer ID or Photo ID" className="px-4 py-2 rounded-lg mb-6 border w-[60vw]" />
 
