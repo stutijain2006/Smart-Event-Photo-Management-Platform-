@@ -61,22 +61,22 @@ function EventContent(){
             {selectionMode && (
                 <BatchToolbar type="event" canManage={canManage} />
             )}
-            <div className='flex justify-around items-center mb-6'>
-                <button onClick={() => navigate("/")} className='text-[1.2rem] font-semibold'>←</button>
-                <div className='text-[1.3rem] font-bold mb-4 p-4'>My Events</div>
+            <div className='flex justify-center items-center mb-6'>
+                <button onClick={() => navigate("/")} className='text-[1.4rem] font-semibold mr-6'>←</button>
+                <div className='text-[1.3rem] font-bold mx-12 p-4'>My Events</div>
                     {canManage && 
-                        <div className='flex gap-4'>
-                            <button className='px-4 py-2 border rounded-lg' onClick= {() => setSelectionMode(!selectionMode)}>
+                        <div className='flex items-end gap-6'>
+                            <button className='px-6 py-2 border rounded-lg' onClick= {() => setSelectionMode(!selectionMode)}>
                                 {selectionMode ? "Cancel" : "Select"}
                             </button>
 
-                            <button onClick={() => setShowCreateModal(true)} className='px-4 py-2 bg-gray-300 rounded-lg '>
+                            <button onClick={() => setShowCreateModal(true)} className='px-6 py-2 bg-gray-300 rounded-lg '>
                                     + New Event
                             </button>
                         </div>
                     }
             </div>
-            <input placeholder='Search Events ...' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-full mb-3' />
+            <input placeholder='Search Events ...' value={search} onChange={e => setSearch(e.target.value)} className='border p-2 rounded-lg w-[80vw] mb-6' />
             <EventSection title = "Events Created by You" events={filterBySearch(createdEvents)} onNavigate={navigate} />
             <EventSection title = "Events You are Tagged In" events={filterBySearch(taggedEvents)} onNavigate={navigate} />
             <NewEvent isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={loadEvents} />
@@ -93,7 +93,7 @@ function EventSection({ title, events, onNavigate} : {
     return(
         
         <div className='mb-8'>
-            <h3 className='text-[1.2rem] font-semibold mb-3'>{title}</h3>
+            <h3 className='text-[1.3rem] font-semibold mb-4'>{title}</h3>
             <div className='grid grid-cols-2 gap-4'>
                 {events.map((event: any) => (
                     <SelectableCard 
@@ -101,7 +101,7 @@ function EventSection({ title, events, onNavigate} : {
                         id={event.event_id}
                         onClick={() => onNavigate(`/events/${event.event_id}`)}
                         >
-                            <div className='bg-white p-4 rounded-lg shadow'>
+                            <div className='bg-[#f2f2f2] px-6 py-4 rounded-lg shadow'>
                                 <h3 className='font-semibold text-[1rem]'>{event.event_name}</h3>
                                 <p className='font-medium text-[0.8rem]'>{event.event_date}</p>
                             </div>

@@ -4,7 +4,7 @@ import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa';
 
 export default function Footer() {
     return (
-        <footer className="px-8 py-6 bg-blue-200">
+        <footer className="px-8 py-4 bg-blue-200">
             <div className='flex items-start justify-between gap-4'>
                 <div className='flex flex-col gap-4 mx-4 items-start'>
                     <div className='text-[1rem] font-medium'> Smart Event Photo Management Platform </div>
@@ -26,7 +26,7 @@ export default function Footer() {
                     </div>
                 </div>
             </div>
-            <div className='text-center m-4 text-[0.8rem]'>© {new Date().getFullYear()} Smart Event Photo Management Platform. All rights reserved.</div>
+            <div className='text-center mt-4 text-[0.8rem]'>© {new Date().getFullYear()} Smart Event Photo Management Platform. All rights reserved.</div>
         </footer>
     );
 }
