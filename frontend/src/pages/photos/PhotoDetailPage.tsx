@@ -76,18 +76,18 @@ export default function PhotoDetailPage(){
         <DashboardLayout>
             <div className="flex flex-col justify-center items-center p-6">
                 <div className="flex justify-around items-center px-4">
-                    <button onClick={() => navigate(-1)} className="text-[1.3rem]">←</button>
+                    <button onClick={() => navigate(-1)} className="text-[1.3rem] px-10">←</button>
                     <div className="text-[1.3rem] font-bold">{photo.taken_at  || "-"}</div>
                 </div>
                 <img src= {photo.file_original} alt= "photo" className="w-[70vw] h-[70vh] object-contain rounded-lg" />
-                <div className="flex items-start justify-around px-4"> 
-                    <button onClick={() => setShowShare(true)} className="bg-gray-300 p-2 rounded-lg"> Share </button>
-                    <div className="flex justify-center items-center gap-3">
+                <div className="flex items-start justify-around px-4 py-4"> 
+                    <button onClick={() => setShowShare(true)} className="bg-gray-300 p-2 rounded-lg mx-6"> Share </button>
+                    <div className="flex justify-center items-center gap-4">
                         <button onClick={likePhoto} className= {`p-2 rounded-lg transition ${photo.liked_by_me ? "bg-gray-300 text-red-500" : "bg-gray-300"}`}>{photo.liked_by_me ? "❤️ Liked" : "🤍 Like" }</button>
                         <button onClick={() => setShowDetails(true)} className="bg-gray-300 p-2 rounded-lg"> 👀 Details</button>
                         <button onClick={() => setShowDownload(true)} className="bg-gray-300 p-2 rounded-lg"> ⬇ Download ({photo.download_count})</button>
                     </div>
-                    <div className="flex justify-center items-center gap-4">
+                    <div className="flex justify-center items-center gap-4 px-6">
                         <button className="bg-gray-300 p-2 rounded-lg" onClick={() => setShowComments(true)} > Comments</button>
                         {canManage && (
                             <button onClick={() => setShowTag(true)} className="bg-gray-300 p-2 rounded-lg">Tag People</button>
