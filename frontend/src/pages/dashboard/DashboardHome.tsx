@@ -29,7 +29,7 @@ export default function DashboardHome() {
 
 function DashboardCard({ title, onClick }: { title: string, onClick?: () => void }) {
     return (
-        <div className="p-4 bg-[#f5f5f5] shadow-md rounded-lg">
+        <div className="p-4 bg-[#f2f2f2] shadow-md rounded-lg">
             <h3 className="text-[1rem] font-semibold" onClick={onClick} >{title}</h3>
         </div>
     );
