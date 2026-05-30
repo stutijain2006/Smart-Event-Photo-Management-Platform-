@@ -20,6 +20,10 @@ keras>=3.0
 requests>=2.31
 python-dotenv>=1.0
 
+# Cloud storage (S3-compatible: R2, AWS S3, Supabase, Backblaze B2)
+django-storages[s3]>=1.14
+boto3>=1.34
+
 # Django extensions (INSTALLED_APPS)
 django-cors-headers>=4.0
 django-extensions>=3.2

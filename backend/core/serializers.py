@@ -3,6 +3,18 @@ from django.contrib.auth import authenticate
 from django.db.models import F
 from .models import Person , Events , Album , Photo , EmailOTP , PhotoLike , Comments, Download, PersonTag, RoleChangeRequest, UserRole, PhotoMetaData, Role, Notification
 
+
+def absolute_file_url(serializer, file_field):
+    if not file_field:
+        return None
+    url = file_field.url
+    if url.startswith("http://") or url.startswith("https://"):
+        return url
+    request = serializer.context.get("request")
+    if request:
+        return request.build_absolute_uri(url)
+    return url
+
 class PersonSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
     class Meta:
@@ -80,11 +92,20 @@ class AlbumSerializer(serializers.ModelSerializer):
 
 class PhotoSerializer(serializers.ModelSerializer):
     created_by = serializers.ReadOnlyField(source="created_by.person_name") 
-    file_original = serializers.ImageField(read_only=True)
-    file_watermarked = serializers.ImageField(read_only=True)
-    file_compressed = serializers.ImageField(read_only=True)
+    file_original = serializers.SerializerMethodField()
+    file_watermarked = serializers.SerializerMethodField()
+    file_compressed = serializers.SerializerMethodField()
     photographer_name = serializers.CharField(source = "uploaded_by.person_name", read_only = True)
     liked_by_me = serializers.SerializerMethodField()
+
+    def get_file_original(self, obj):
+        return absolute_file_url(self, obj.file_original)
+
+    def get_file_watermarked(self, obj):
+        return absolute_file_url(self, obj.file_watermarked)
+
+    def get_file_compressed(self, obj):
+        return absolute_file_url(self, obj.file_compressed)
 
     def get_liked_by_me(self, obj):
         request= self.context.get('request')

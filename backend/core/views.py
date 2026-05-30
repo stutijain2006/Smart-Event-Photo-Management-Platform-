@@ -1,7 +1,6 @@
 import uuid
 import os
 import io
-from django.core.files.storage import default_storage
 from django.core.mail import send_mail
 from django.conf import settings
 from PIL import Image, ExifTags
@@ -392,11 +391,9 @@ class DownloadPhoto(APIView):
         )    
         photo.download_count += 1
         photo.save(update_fields=["download_count"]) 
-        response = FileResponse(
-            open(file_field.path, "rb"),
-            content_type="image/jpeg"
-        )
-        response["Content-Disposition"] = (f"attachment; filename={file_field.name}")
+        file_handle = file_field.open("rb")
+        response = FileResponse(file_handle, content_type="image/jpeg")
+        response["Content-Disposition"] = f'attachment; filename="{os.path.basename(file_field.name)}"'
         return response
         
 
@@ -559,7 +556,7 @@ class PhotoUpload(APIView):
             generate_variants(photo)
             try:
                 extract_and_save_metadata(photo)
-                tags = generate_tags(photo.file_original.path)
+                tags = generate_tags(photo.file_original)
                 photo.tags = tags
                 photo.status = "ready"
             except Exception as e:
@@ -607,11 +604,11 @@ def get_exif(img: Image.Image) -> dict:
 def extract_and_save_metadata(photo: Photo):
     if not photo.file_original:
         raise Exception("Image not found")
-    full_path = photo.file_original.path
-    if not os.path.exists(full_path):
-        raise Exception("Image not found")
-    exif = Image.open(full_path)
-    img = get_exif(exif)
+    with photo.file_original.open("rb") as f:
+        exif = Image.open(f)
+        img = get_exif(exif)
+        width = str(exif.width)
+        height = str(exif.height)
 
     def _str(v):
         return str(v) if v is not None else None 
@@ -624,8 +621,6 @@ def extract_and_save_metadata(photo: Photo):
     exposure_time = _str(img.get("ExposureTime"))
     iso = _str(img.get("ISOSpeedRatings")) or _str(img.get("PhotometricInterpretation"))
     flash = _str(img.get("Flash"))
-    width = str(exif.width)
-    height = str(exif.height)
     gps_info = img.get("GPSInfo")
     gps_cords = None
     if gps_info:

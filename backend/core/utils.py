@@ -1,12 +1,13 @@
+import os
 import random
+from io import BytesIO
+
 import requests
 from django.conf import settings
+from django.core.files.base import ContentFile
 from PIL import Image
-from django.core.files import File
-import os
-import numpy as np
-from PIL import Image
-import tensorflow as tf
+
+from .storage_utils import open_image_from_field, save_bytes_to_image_field
 
 def generate_otp() -> str:
     return f"{random.randint(100000, 999999)}"
@@ -72,58 +73,56 @@ def omniport_revoke_token(token: str, token_type_hint : str = "access_token") ->
     response.raise_for_status()
     return response.json()
 
-def generate_variants(photo):
-    original_path = photo.file_original.path
-    base_dir = os.path.dirname(original_path)
-    filename= os.path.splitext(os.path.basename(original_path))[0]
-    
-    compressed_dir = base_dir.replace("photos/original", "photos/compressed")
-    os.makedirs(compressed_dir, exist_ok=True)
-    compressed_path = os.path.join(compressed_dir, f"{filename}.jpg")
+def _image_stem(image_field) -> str:
+    return os.path.splitext(os.path.basename(image_field.name))[0]
 
-    with Image.open(original_path) as img:
-        img = img.convert("RGB")
-        img.info.pop("exif", None)
-        img.save(
-            compressed_path,
-            format="JPEG",
-            optimize=True,
-            quality=40,
-            subsampling=2
-        )
-    photo.file_compressed.save(
-        f"{filename}.jpg",
-        File(open(compressed_path, "rb")),
-        save=False
+
+def generate_variants(photo):
+    """Build compressed + watermarked copies and save via default storage (local or cloud)."""
+    original = open_image_from_field(photo.file_original)
+    stem = _image_stem(photo.file_original)
+
+    compressed_buf = BytesIO()
+    original.save(
+        compressed_buf,
+        format="JPEG",
+        optimize=True,
+        quality=40,
+        subsampling=2,
+    )
+    save_bytes_to_image_field(
+        photo.file_compressed,
+        compressed_buf.getvalue(),
+        f"{stem}.jpg",
+        save=False,
     )
 
     watermark_logo_path = os.path.join(settings.BASE_DIR, "static", "watermark.png")
-    if not os.path.exists(watermark_logo_path):
-        raise FileNotFoundError("Watermark not found")
-
-    watermarked_dir = base_dir.replace("photos/original", "photos/watermarked")
-    os.makedirs(watermarked_dir, exist_ok=True)
-    watermarked_path = os.path.join(watermarked_dir, f"{filename}.jpg")
-
-    with Image.open(original_path) as img:
-        base = img.convert("RGBA").copy()
+    if os.path.exists(watermark_logo_path):
+        watermarked_buf = BytesIO()
+        base = original.copy()
+        if base.mode != "RGBA":
+            base = base.convert("RGBA")
         with Image.open(watermark_logo_path).convert("RGBA") as watermark:
             watermark = watermark.resize(
                 (int(base.width * 0.2), int(base.height * 0.2))
             )
-
             x = base.width - watermark.width - 20
             y = base.height - watermark.height - 20
             base.paste(watermark, (x, y), watermark)
-
-            base.convert("RGB").save(watermarked_path, format="JPEG")
-
-    photo.file_watermarked.save(
-        f"{filename}.jpg",
-        File(open(watermarked_path, "rb")),
-        save=False
-    )
+            base.convert("RGB").save(watermarked_buf, format="JPEG")
+        save_bytes_to_image_field(
+            photo.file_watermarked,
+            watermarked_buf.getvalue(),
+            f"{stem}.jpg",
+            save=False,
+        )
+    else:
+        save_bytes_to_image_field(
+            photo.file_watermarked,
+            compressed_buf.getvalue(),
+            f"{stem}.jpg",
+            save=False,
+        )
 
     photo.save()
-
- 

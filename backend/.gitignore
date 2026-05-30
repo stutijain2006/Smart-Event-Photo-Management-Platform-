@@ -6,7 +6,6 @@ env/
 
 # Environment & secrets
 .env
-.env.*
 
 # Django
 db.sqlite3

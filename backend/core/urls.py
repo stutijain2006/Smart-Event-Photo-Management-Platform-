@@ -72,4 +72,5 @@ urlpatterns =[
     path("roles/", RoleListView.as_view(), name="role-list"),
     path("photos/my/", MyPhotoListView.as_view(), name="my-photos"),
 ]
-urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if not getattr(settings, "USE_S3", False):
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
