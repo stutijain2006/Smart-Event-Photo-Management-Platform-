@@ -1,0 +1,29 @@
+# Core
+Django>=5.2,<6
+djangorestframework>=3.15
+
+# ASGI / WebSockets (Django Channels)
+channels>=4.0
+channels-redis>=4.2
+daphne>=4.0
+
+# Database (PostgreSQL in settings.py)
+psycopg2-binary>=2.9
+
+# Images & AI auto-tagging
+Pillow>=10.0
+numpy>=1.26
+tensorflow>=2.16
+keras>=3.0
+
+# HTTP & configuration
+requests>=2.31
+python-dotenv>=1.0
+
+# Django extensions (INSTALLED_APPS)
+django-cors-headers>=4.0
+django-extensions>=3.2
+django-sslserver>=0.22
+
+# Local HTTPS certs (generate_cert.py)
+trustme>=1.0

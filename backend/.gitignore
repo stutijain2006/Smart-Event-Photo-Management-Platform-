@@ -1,18 +1,24 @@
-/.env
-/media
+# Virtual environments
+.venv/
+venv/
+env/
+.env/
 
+# Environment & secrets
+.env
+.env.*
+
+# Django
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+*.log
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-venv/
-env/
-.venv/
-
-media/
-staticfiles/
-db.sqlite3
-.log
 
 .keras/
 .tensorflow/
@@ -25,21 +31,5 @@ db.sqlite3
 *.index
 *.data-*
 
-*.log
-db.sqlite3
-media/
-.env
-
+*.pem
 .vscode/
-
-node_modules/
-
-.DS_Store
-Thumbs.db
-
-
-node_modules/
-dist/
-build/
-.vite/
-
